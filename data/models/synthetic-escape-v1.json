@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "name": "Synthetic visual threat to escape demonstrator",
+  "type": "LIF",
+  "provenance": "Hand-authored synthetic engineering circuit; not a biological connectome.",
+  "neurons": [
+    { "id": "visual-threat", "role": "sensory input", "tauMs": 10, "restMv": -65, "thresholdMv": -50, "resetMv": -65, "refractoryMs": 2 },
+    { "id": "escape-command", "role": "motor command", "tauMs": 15, "restMv": -65, "thresholdMv": -50, "resetMv": -65, "refractoryMs": 3 }
+  ],
+  "synapses": [
+    { "source": "visual-threat", "target": "escape-command", "weight": 23, "sign": "excitatory", "delayMs": 0 }
+  ],
+  "warning": "The shipped runtime circuit is implemented in code and these values document it. This synthetic mapping is not evidence for a specific Drosophila neuron or motor pathway."
+}

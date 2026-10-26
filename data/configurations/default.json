@@ -1,0 +1,9 @@
+{
+  "SchemaVersion": 1,
+  "Language": "en",
+  "StartPaused": false,
+  "StartInTray": false,
+  "ShowDiagnostics": true,
+  "RandomSeed": 42,
+  "FlySize": 1
+}

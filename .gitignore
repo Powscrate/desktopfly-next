@@ -1,0 +1,6 @@
+**/bin/
+**/obj/
+artifacts/
+experiments/closed-loop-export.csv
+*.user
+*.suo

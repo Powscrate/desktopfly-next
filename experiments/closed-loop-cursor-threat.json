@@ -1,0 +1,19 @@
+{
+  "name": "Cursor approach → sensory LIF → escape motor response",
+  "schemaVersion": 1,
+  "seed": 42,
+  "durationSeconds": 10,
+  "sampleRateHz": 60,
+  "initialFlyPositionPx": [650, 400],
+  "virtualDesktopPx": [1366, 768],
+  "stimulus": {
+    "kind": "simulated cursor only",
+    "cursorStartsAtPx": [1100, 400],
+    "approachStartsAtSeconds": 3,
+    "approachDurationSeconds": 1,
+    "cursorEndsAtPx": [740, 400],
+    "noScreenCapture": true
+  },
+  "outputs": ["fly position", "behavior state", "normalized threat", "sensory spike count", "motor spike count"],
+  "exportCommand": "dotnet run --project tests/DesktopFly.Simulation.Tests -- --experiment experiments/closed-loop-export.csv"
+}
