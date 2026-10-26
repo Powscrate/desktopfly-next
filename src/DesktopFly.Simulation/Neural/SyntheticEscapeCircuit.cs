@@ -5,7 +5,7 @@ public sealed class SyntheticEscapeCircuit
 {
     private readonly LifNeuron _sensory = new(timeConstantMs: 10, refractoryPeriodMs: 2);
     private readonly LifNeuron _escape = new(timeConstantMs: 15, refractoryPeriodMs: 3);
-    private const double SensoryToMotorWeight = 23;
+    private const double SensoryToMotorWeight = 45;
     public long SensorySpikes => _sensory.SpikeCount;
     public long MotorSpikes => _escape.SpikeCount;
 

@@ -12,7 +12,7 @@ Defaults in `LifNeuron`: resting potential −65 mV, threshold −50 mV, reset �
 
 ## Shipped synthetic circuit
 
-A normalized threat input [0,1] is converted to drive by multiplying by 25. Spikes from the sensory unit inject an immediate excitatory current of 23 into the escape-command unit. The second unit's spikes cause a motor impulse away from the cursor. These arbitrary values are chosen for a small, legible, testable closed loop; they are not fit to electrophysiology or a published circuit.
+A normalized threat input [0,1] is converted to drive by multiplying by 25. Spikes from the sensory unit inject an immediate excitatory current of 45 into the escape-command unit. The second unit's spikes cause a motor impulse away from the cursor. These arbitrary values are chosen for a small, legible, testable closed loop; they are not fit to electrophysiology or a published circuit.
 
 ## Limitations
 
