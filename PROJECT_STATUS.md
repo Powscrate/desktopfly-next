@@ -30,9 +30,9 @@ See `src/`, `tests/`, `data/`, `experiments/`, `docs`-level Markdown files and `
 ## Build and tests
 
 - Environment inspected: Linux x86_64; no `dotnet`, `msbuild`, `csc`, Mono, or PowerShell executable was available.
-- Build status: user reported a Release build succeeded on Windows with .NET SDK 8.0.427 (0 warnings/errors) before the latest synaptic-weight adjustment; rebuild after that change is still required.
-- Automated test status: user reported 6/7 checks passed; the closed-loop neural motor assertion failed with the original synthetic synapse weight. The synthetic excitatory weight has been increased and matching docs/data updated; rerun the checks to verify the fix.
-- Windows overlay smoke/UI test status: **not run; requires Windows**. User's first `dotnet run` exposed GDI+ leg-coordinate type errors and a WinForms high-DPI manifest warning. The gait calculation now uses float coordinates, and high-DPI mode is configured with `ApplicationHighDpiMode=PerMonitorV2`; rebuild/run is needed to confirm.
+- Build status: user reports the Windows app launched successfully on .NET SDK 8.0.427 after the GDI+ coordinate and DPI fixes.
+- Automated test status: user reports all 7 headless checks passed.
+- Windows overlay smoke/UI test status: user confirms the fly appeared and reacted to/avoided the mouse. Tray pause/resume, French menu selection, click-through/drag modes, and exit still need a smoke check.
 - Performance status: no measurements. See `PERFORMANCE_REPORT.md`.
 
 ## Known issues / limitations
