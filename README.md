@@ -1,6 +1,6 @@
 # DesktopFly Next
 
-DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at an early **0.1.0 engineering prototype** milestone. It combines a native transparent WinForms overlay with a separate, headless .NET simulation core. The overlay now uses a four-frame, software-rendered sprite atlas baked from an assembled scan-derived *Drosophila* 3D model; it is a 3D-derived 2D presentation, not live 3D rendering or a measured animation.
+DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at an early **0.1.0 engineering prototype** milestone. It combines a native transparent WinForms overlay with a separate, headless .NET simulation core. The overlay displays a software-rendered view of the actual scan-derived *Drosophila* mesh, assembled in FlyGym's documented tripod pose. It is a static 3D-derived 2D presentation, not live 3D rendering or an animation.
 
 **French UI is included.** Right-click the notification-area icon → “Language / Langue” → “Français”. Language is persisted locally. The initial language is English; the choice is made in-app.
 
@@ -9,7 +9,7 @@ DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at
 - Windows 10/11, x64 native WinForms overlay: borderless, always-on-top, virtual-desktop bounds, transparency-key background, click-through by default, optional grab/drag interaction, pause/resume/reset/show-hide/exit from a tray menu, optional start-in-tray configuration, English/French UI strings, local configuration and rotating local logs.
 - A non-modal settings and diagnostics window with live state/threat/position/spike counts; adjustable simulation speed and fly size; pause, cursor-avoidance and desktop-diagnostics toggles; independent neural reset.
 - A deterministic, headless simulation core: cursor-proximity/motion threat signal → two LIF neurons (sensory afferent and synthetic escape-command unit) → motor spike → physically constrained movement. This is an explicit, causal neural-to-motor path; the tiny circuit is synthetic, not a FlyWire model.
-- Basic exploratory/escape/rest states displayed with a four-frame sprite atlas baked from NeuroMechFly v2's 69-part, micro-CT-derived anatomical mesh (Apache-2.0). FlyGym/MuJoCo neutral-pose transforms assemble the separate local-frame meshes; GDI+ draws the shaded sprite into a separate per-pixel-alpha window, avoiding magenta color-key fringes. Wing-flutter frames are illustrative. A procedural 2D fallback remains available if atlas rendering fails.
+- Basic exploratory/escape/rest states displayed with one static image baked from NeuroMechFly v2's 69-part, micro-CT-derived anatomical mesh (Apache-2.0). The actual mesh parts, including six legs with five tarsal segments each, are assembled using FlyGym/MuJoCo transforms from its documented tripod walking snapshot. GDI+ renders this real geometry into a per-pixel-alpha window. There is no hand-drawn fly fallback, invented wingbeat, or fabricated foot; if the model asset cannot render, the model is hidden and an error is logged.
 - Dependency-free console checks and a reproducible closed-loop CSV experiment runner.
 
 ## Build and run (Windows)

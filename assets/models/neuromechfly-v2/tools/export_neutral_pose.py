@@ -25,7 +25,7 @@ HERE = Path(__file__).resolve().parent.parent
 GLB = HERE / "drosophila.glb"
 OUTPUT = HERE / "rest-pose.json"
 MODEL_XML = "neuromechfly_seqik_kinorder_ypr.xml"
-POSE_YAML = "pose_stretch.yaml"
+POSE_YAML = "pose_tripod.yaml"
 
 
 def glb_node_names(path: Path) -> list[str]:

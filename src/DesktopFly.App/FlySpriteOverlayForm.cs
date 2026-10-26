@@ -56,7 +56,7 @@ internal sealed class FlySpriteOverlayForm : Form
         }
     }
 
-    public void Present(Vector2 center, double headingRadians, float scale, int frame)
+    public void Present(Vector2 center, double headingRadians, float scale)
     {
         if (IsDisposed) return;
         if (!IsHandleCreated) _ = Handle;
@@ -73,7 +73,7 @@ internal sealed class FlySpriteOverlayForm : Form
             graphics.TranslateTransform(CanvasSize / 2f, CanvasSize / 2f);
             graphics.RotateTransform((float)(headingRadians * 180.0 / Math.PI));
             graphics.ScaleTransform(scale, scale);
-            _atlas.Draw(graphics, new RectangleF(-42, -34, 84, 68), frame);
+            _atlas.Draw(graphics, new RectangleF(-42, -34, 84, 68));
         }
 
         var data = _canvas.LockBits(new Rectangle(0, 0, CanvasSize, CanvasSize),

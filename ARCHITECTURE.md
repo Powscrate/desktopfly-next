@@ -11,7 +11,7 @@ LIF visual-threat unit → immediate excitatory synthetic synapse → LIF escape
      ↓ motor spike events
 FlySimulation (wander/escape state, velocity, heading, virtual-screen constraints)
      ↓ read-only position/state
-WinForms transparent overlay (embedded shaded 3D-derived sprite; separate per-pixel-alpha window; procedural fallback)
+WinForms transparent overlay (static scan-derived 3D sprite; separate per-pixel-alpha window)
      ↔ non-modal settings/diagnostics window (local controls, live counters)
      ↓ next tick samples cursor again
 ```
@@ -21,7 +21,7 @@ The neural and simulation projects have no rendering or Windows dependencies. `F
 ## Projects
 
 - `src/DesktopFly.Simulation`: cross-platform vector math, environment signal contract, cursor-threat approximation, LIF neuron, synthetic two-cell circuit, headless behavior/locomotion, JSON configuration and local diagnostic logger.
-- `src/DesktopFly.App`: Windows-only WinForms overlay, tray controls, non-modal settings/live diagnostics window, native extended-window-style interop, embedded FlyGym-derived sprite atlas, per-pixel-alpha sprite window and procedural fallback, local cursor integration, English/French strings.
+- `src/DesktopFly.App`: Windows-only WinForms overlay, tray controls, non-modal settings/live diagnostics window, native extended-window-style interop, embedded FlyGym-derived static sprite, per-pixel-alpha sprite window; no substitute drawing, local cursor integration, English/French strings.
 - `tests/DesktopFly.Simulation.Tests`: no-package executable checks plus reproducible CSV experiment mode.
 - `data/`: example configuration and human-readable description of the synthetic circuit. The runtime circuit constants currently live in `SyntheticEscapeCircuit`; the JSON is descriptive, not loaded as a network model.
 
@@ -35,4 +35,4 @@ The window is borderless, topmost, tool-window/no-activate, transparent-keyed an
 
 ## Approximation boundaries
 
-The rendered insect is a 2D GDI+ sprite baked from the licensed, 69-part FlyGym mesh using a static neutral pose; the GLB is not loaded or rasterized at runtime. The four atlas frames use illustrative wing-pivot offsets, not a measured or rigged gait, and the source mesh has no UV texture maps. The fly's screen-space movement is not rigid-body flight or a solved six-limb model. Real desktop obstacles, full sensory modalities, generalized neural-network import, and detailed diagnostic UI are not implemented. The synthetic escape mapping must not be interpreted as a biological circuit claim.
+The displayed anatomy is the licensed, 69-part FlyGym mesh assembled in the official tripod walking snapshot; its six legs and tarsal segments come from the source geometry, not hand-drawn stand-ins. It is rasterized to one static sprite at build time; the GLB is not loaded or rasterized live, and there is no articulated gait or wingbeat. Lighting, surface colors, and the soft shadow are presentation choices; the model has no UV texture maps. The on-screen locomotion and neural circuit remain simplified synthetic behavior, not a measured biological simulation or rigid-body flight. Real desktop obstacles, full sensory modalities, generalized neural-network import, and detailed diagnostic UI are not implemented.

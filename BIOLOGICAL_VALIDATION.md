@@ -2,7 +2,7 @@
 
 ## Claims supported by this prototype
 
-- The app embeds a four-frame GDI+ sprite atlas baked from NeuroMechFly v2's scan-derived geometry for adult female *Drosophila melanogaster*. Its 69 mesh parts are assembled using FlyGym 1.2.1/MuJoCo 3.2.7 static neutral-pose transforms. The app does not load the GLB live, use UV texture maps, or simulate/measure wing kinematics; atlas lighting, coloring, and wing-flutter poses are presentation choices.
+- The app embeds a single GDI+ sprite rendered from NeuroMechFly v2's scan-derived geometry for adult female *Drosophila melanogaster*. Its 69 mesh parts, including six five-segment tarsi, are assembled using FlyGym 1.2.1/MuJoCo 3.2.7 transforms from the documented tripod walking snapshot. No hand-drawn substitute anatomy or invented joint/wing motion is used. The app does not load the GLB live or use UV texture maps; lighting, coloring, and the soft shadow are presentation choices.
 - A leaky integrate-and-fire abstraction is used for two computational units.
 - A stimulus variable is integrated to threshold, producing discrete spikes; a second spiking unit receives excitatory input and affects simulated movement.
 

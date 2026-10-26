@@ -26,7 +26,6 @@ internal sealed class FlyOverlayForm : Form
     private double _lastSampleTime;
     private Vector2 _cursorVelocity;
     private Rectangle _virtualBounds;
-    private double _animationTime;
     private double _simulationAccumulator;
     private bool _paused, _interactive, _showDiagnostics, _dragging, _spriteRenderingFailed;
     private Point _dragOffset;
@@ -57,7 +56,7 @@ internal sealed class FlyOverlayForm : Form
             loadedAtlas?.Dispose();
             _flySpriteWindow = null;
             _flyAtlas = null;
-            _log.Write("WARN", "Could not load 3D fly atlas; using the built-in procedural fallback.", ex);
+            _log.Write("WARN", "Could not load the bundled 3D fly model; no substitute fly will be drawn.", ex);
         }
         _paused = config.StartPaused; _showDiagnostics = config.ShowDiagnostics;
         _virtualBounds = SystemInformation.VirtualScreen;
@@ -122,7 +121,6 @@ internal sealed class FlyOverlayForm : Form
             var cursor = Cursor.Position;
             _cursorVelocity = new Vector2((cursor.X - _lastCursor.X) / dt, (cursor.Y - _lastCursor.Y) / dt);
             _lastCursor = cursor; _lastSampleTime = now;
-            if (!_paused) _animationTime += dt * _config.SimulationSpeedPercent / 100.0;
             if (!_paused)
             {
                 _simulationAccumulator = Math.Min(_simulationAccumulator + dt * _config.SimulationSpeedPercent / 100.0, 0.2);
@@ -240,17 +238,6 @@ internal sealed class FlyOverlayForm : Form
     protected override void OnPaint(PaintEventArgs e)
     {
         e.Graphics.Clear(_transparent); e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        if (_flyAtlas is null || _spriteRenderingFailed)
-        {
-            var x = (float)(_simulation.Position.X - _virtualBounds.Left);
-            var y = (float)(_simulation.Position.Y - _virtualBounds.Top);
-            var scale = _config.FlySize * 0.85f;
-            e.Graphics.TranslateTransform(x, y);
-            e.Graphics.RotateTransform((float)(_simulation.HeadingRadians * 180 / Math.PI));
-            e.Graphics.ScaleTransform(scale, scale);
-            DrawProceduralFly(e.Graphics);
-            e.Graphics.ResetTransform();
-        }
         if (_showDiagnostics)
         {
             using var font = new Font("Segoe UI", 9, FontStyle.Regular);
@@ -264,56 +251,18 @@ internal sealed class FlyOverlayForm : Form
     private void RenderFlySprite()
     {
         if (!Visible || _flySpriteWindow is null || _spriteRenderingFailed) return;
-        var beatsPerSecond = _simulation.State == FlyState.Escape ? 22.0 : 1.4;
-        var frame = (int)Math.Floor(_animationTime * beatsPerSecond * FlySpriteAtlas.FrameCount);
         try
         {
             _flySpriteWindow.Present(_simulation.Position, _simulation.HeadingRadians,
-                _config.FlySize * 0.85f, frame);
+                _config.FlySize * 0.85f);
         }
         catch (Exception ex)
         {
             _spriteRenderingFailed = true;
             _flySpriteWindow.Hide();
-            _log.Write("ERROR", "Per-pixel-alpha fly rendering failed; using the procedural fallback.", ex);
+            _log.Write("ERROR", "Per-pixel-alpha fly rendering failed; hiding the model instead of drawing a mock substitute.", ex);
             Invalidate();
         }
-    }
-
-    private void DrawProceduralFly(Graphics g)
-    {
-        var phase = _animationTime * (2 + Math.Min(_simulation.Speed / 30, 2));
-        var gait = (float)Math.Sin(phase) * 3.8f;
-        using var leg = new Pen(Color.FromArgb(255, 54, 44, 39), 1.5f);
-        using var wing = new SolidBrush(Color.FromArgb(110, 190, 218, 220));
-        using var wingLine = new Pen(Color.FromArgb(150, 112, 151, 158), 0.65f);
-        using var thorax = new LinearGradientBrush(new RectangleF(-9, -7, 20, 14), Color.FromArgb(190, 132, 73), Color.FromArgb(80, 43, 34), 35);
-        using var abdomen = new LinearGradientBrush(new RectangleF(-31, -6, 25, 12), Color.FromArgb(223, 158, 66), Color.FromArgb(86, 48, 34), 90);
-        using var dark = new SolidBrush(Color.FromArgb(33, 28, 29));
-        using var eye = new SolidBrush(Color.FromArgb(139, 24, 37));
-        // Two translucent, veined wings, driven by flight/escape arousal.
-        var flutter = _simulation.State == FlyState.Escape ? Math.Sin(_animationTime * 48) * 3 : Math.Sin(_animationTime * 7) * 1.5;
-        var wingPath = new GraphicsPath(); wingPath.AddBezier(-1, -4, -7, -25 - (float)flutter, 13, -28 + (float)flutter, 18, -8);
-        wingPath.AddBezier(18, -8, 14, -3, 5, -2, -1, -4);
-        g.FillPath(wing, wingPath); g.DrawBezier(wingLine, -1, -4, -7, -25 - (float)flutter, 13, -28 + (float)flutter, 18, -8);
-        g.DrawLine(wingLine, 1, -5, 9, -22); g.DrawLine(wingLine, 4, -5, 15, -13);
-        wingPath.Dispose();
-        var lowerWing = new GraphicsPath(); lowerWing.AddBezier(-1, 4, -7, 25 + (float)flutter, 13, 28 - (float)flutter, 18, 8); lowerWing.AddBezier(18, 8, 14, 3, 5, 2, -1, 4);
-        g.FillPath(wing, lowerWing); g.DrawBezier(wingLine, -1, 4, -7, 25 + (float)flutter, 13, 28 - (float)flutter, 18, 8); g.DrawLine(wingLine, 2, 5, 11, 22); lowerWing.Dispose();
-        // Six articulated legs. Alternating tripod gait is a visual approximation.
-        for (var i = 0; i < 3; i++)
-        {
-            var ax = -4 + i * 6;
-            var offset = (float)Math.Sin(phase + i * Math.PI) * gait;
-            g.DrawLine(leg, ax, -4, ax + (i - 1) * 7, -12 - offset); g.DrawLine(leg, ax + (i - 1) * 7, -12 - offset, ax + (i - 1) * 10 + 4, -13 - offset);
-            g.DrawLine(leg, ax, 4, ax + (i - 1) * 7, 12 + offset); g.DrawLine(leg, ax + (i - 1) * 7, 12 + offset, ax + (i - 1) * 10 + 4, 13 + offset);
-        }
-        g.FillEllipse(thorax, -10, -7, 19, 14);
-        g.FillEllipse(abdomen, -31, -5.5f, 24, 11);
-        using (var stripe = new Pen(Color.FromArgb(100, 48, 35, 29), 1)) { for (var sx = -27; sx < -8; sx += 6) g.DrawLine(stripe, sx, -4, sx, 4); }
-        g.FillEllipse(dark, 5, -7, 12, 14); g.FillEllipse(eye, 10, -8, 11, 8); g.FillEllipse(eye, 10, 0, 11, 8);
-        using var antenna = new Pen(Color.FromArgb(70, 49, 43), 1f);
-        g.DrawBezier(antenna, 16, -3, 19, -10, 25, -12, 27, -9); g.DrawBezier(antenna, 16, 3, 19, 10, 25, 12, 27, 9);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)

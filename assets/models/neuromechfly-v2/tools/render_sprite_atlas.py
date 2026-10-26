@@ -10,7 +10,6 @@ Requires Python 3.10+, numpy, Pillow, trimesh, and fast-simplification (via trim
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
 import numpy as np
@@ -24,10 +23,6 @@ OUTPUT = HERE / "desktopfly-sprite-atlas.png"
 
 WIDTH, HEIGHT = 320, 256
 SUPERSAMPLE = 3
-FRAMES = 4
-# Mild wing beats around the attachment hinge; this is a visual animation only, not
-# a measured or biologically validated gait.
-WING_ANGLES_DEG = (0.0, 28.0, 0.0, -28.0)
 MAX_FACES_PER_PART = 800
 MAX_WING_FACES = 2600
 
@@ -77,7 +72,6 @@ def prepare_parts() -> tuple[list[dict], np.ndarray]:
             "faces": faces,
             "rgba": tuple(int(c) for c in source.visual.face_colors[0]),
             "wing": "Wing" in name,
-            "hinge": geom_position.copy(),
         })
         all_points.append(world_vertices)
     return prepared, np.concatenate(all_points)
@@ -85,7 +79,7 @@ def prepare_parts() -> tuple[list[dict], np.ndarray]:
 
 def camera_frame(points: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, float, np.ndarray, np.ndarray]:
     # Natural side view with a slight downward look to show wing venation and the legs.
-    view = np.array([0.0, 0.93, -0.37], dtype=np.float64)
+    view = np.array([-0.26, 0.90, -0.37], dtype=np.float64)
     view /= np.linalg.norm(view)
     world_up = np.array([0.0, 0.0, 1.0])
     right = np.cross(view, world_up)
@@ -144,7 +138,7 @@ def material_color(name: str, original: tuple[int, int, int, int], point: np.nda
     return tuple(int(np.clip(c, 0, 255)) for c in base) + (alpha,)
 
 
-def render_frame(parts: list[dict], points: np.ndarray, camera: tuple, wing_angle: float) -> Image.Image:
+def render_frame(parts: list[dict], camera: tuple) -> Image.Image:
     right, up, view, scale, center, target = camera
     size = (WIDTH * SUPERSAMPLE, HEIGHT * SUPERSAMPLE)
     # Contact shadow: a softly blurred oval below the thorax, kept separate from the mesh.
@@ -162,25 +156,13 @@ def render_frame(parts: list[dict], points: np.ndarray, camera: tuple, wing_angl
     draw_wings = ImageDraw.Draw(wings)
     light = np.array([-0.32, -0.78, 0.78], dtype=np.float64)
     light /= np.linalg.norm(light)
-    eye_light = np.array([-0.18, -0.70, 0.90], dtype=np.float64)
-    eye_light /= np.linalg.norm(eye_light)
     camera_dir = -view
     tri_list: list[tuple[float, dict, np.ndarray, np.ndarray, np.ndarray, int]] = []
 
-    angle = math.radians(wing_angle)
-    flap = np.array([[1, 0, 0], [0, math.cos(angle), -math.sin(angle)],
-                     [0, math.sin(angle), math.cos(angle)]], dtype=np.float64)
     for part in parts:
-        verts = part["vertices"]
-        normals = part["normals"]
-        if part["wing"]:
-            # Rotate about the wing mesh origin, the attachment point in the FlyGym MJCF.
-            pivot = part["hinge"]
-            verts = (verts - pivot) @ flap.T + pivot
-            normals = normals @ flap.T
         for face_idx, face in enumerate(part["faces"]):
-            tri = verts[face]
-            normal = normals[face].mean(axis=0)
+            tri = part["vertices"][face]
+            normal = part["normals"][face].mean(axis=0)
             normal /= max(float(np.linalg.norm(normal)), 1e-9)
             center_world = tri.mean(axis=0)
             depth = float(np.dot(center_world - target, view))
@@ -214,12 +196,9 @@ def render_frame(parts: list[dict], points: np.ndarray, camera: tuple, wing_angl
 def main() -> None:
     parts, points = prepare_parts()
     camera = camera_frame(points)
-    frames = [render_frame(parts, points, camera, angle) for angle in WING_ANGLES_DEG]
-    atlas = Image.new("RGBA", (WIDTH * FRAMES, HEIGHT), (0, 0, 0, 0))
-    for i, frame in enumerate(frames):
-        atlas.alpha_composite(frame, (i * WIDTH, 0))
-    atlas.save(OUTPUT, optimize=True)
-    print(f"Wrote {OUTPUT} ({OUTPUT.stat().st_size:,} bytes, {FRAMES} frames, {WIDTH}x{HEIGHT} each)")
+    sprite = render_frame(parts, camera)
+    sprite.save(OUTPUT, optimize=True)
+    print(f"Wrote {OUTPUT} ({OUTPUT.stat().st_size:,} bytes, {WIDTH}x{HEIGHT})")
 
 
 if __name__ == "__main__":
