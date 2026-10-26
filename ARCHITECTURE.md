@@ -12,6 +12,7 @@ LIF visual-threat unit → immediate excitatory synthetic synapse → LIF escape
 FlySimulation (wander/escape state, velocity, heading, virtual-screen constraints)
      ↓ read-only position/state
 WinForms transparent overlay (procedural 2D drawing)
+     ↔ non-modal settings/diagnostics window (local controls, live counters)
      ↓ next tick samples cursor again
 ```
 
@@ -20,7 +21,7 @@ The neural and simulation projects have no rendering or Windows dependencies. `F
 ## Projects
 
 - `src/DesktopFly.Simulation`: cross-platform vector math, environment signal contract, cursor-threat approximation, LIF neuron, synthetic two-cell circuit, headless behavior/locomotion, JSON configuration and local diagnostic logger.
-- `src/DesktopFly.App`: Windows-only WinForms overlay, tray controls, native extended-window-style interop, procedural rendering, local cursor integration, English/French strings.
+- `src/DesktopFly.App`: Windows-only WinForms overlay, tray controls, non-modal settings/live diagnostics window, native extended-window-style interop, procedural rendering, local cursor integration, English/French strings.
 - `tests/DesktopFly.Simulation.Tests`: no-package executable checks plus reproducible CSV experiment mode.
 - `data/`: example configuration and human-readable description of the synthetic circuit. The runtime circuit constants currently live in `SyntheticEscapeCircuit`; the JSON is descriptive, not loaded as a network model.
 

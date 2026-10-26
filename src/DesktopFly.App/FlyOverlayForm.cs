@@ -29,6 +29,7 @@ internal sealed class FlyOverlayForm : Form
     private bool _paused, _interactive, _showDiagnostics, _dragging;
     private Point _dragOffset;
     private ToolStripMenuItem _overlayItem = null!;
+    private ToolStripMenuItem _settingsItem = null!;
     private ToolStripMenuItem _pauseItem = null!;
     private ToolStripMenuItem _resetItem = null!;
     private ToolStripMenuItem _interactionItem = null!;
@@ -36,6 +37,7 @@ internal sealed class FlyOverlayForm : Form
     private ToolStripMenuItem _languageItem = null!;
     private ToolStripMenuItem _englishItem = null!;
     private ToolStripMenuItem _frenchItem = null!;
+    private SettingsForm? _settingsForm;
 
     public FlyOverlayForm(AppConfiguration config, string configPath, DiagnosticLog log)
     {
@@ -52,7 +54,7 @@ internal sealed class FlyOverlayForm : Form
         _timer = new System.Windows.Forms.Timer { Interval = 16 };
         _timer.Tick += OnTick;
         _tray = new NotifyIcon { Icon = SystemIcons.Application, Text = "DesktopFly Next", Visible = true, ContextMenuStrip = BuildMenu() };
-        _tray.DoubleClick += (_, _) => { if (!Visible) SetOverlayVisible(true); else _paused = !_paused; UpdateMenu(); };
+        _tray.DoubleClick += (_, _) => { if (!Visible) SetOverlayVisible(true); else SetPaused(!_paused); };
         _timer.Start();
         UpdateMenu();
     }
@@ -72,17 +74,18 @@ internal sealed class FlyOverlayForm : Form
     {
         var menu = new ContextMenuStrip();
         _overlayItem = new ToolStripMenuItem(); _overlayItem.Click += (_, _) => SetOverlayVisible(!Visible);
-        _pauseItem = new ToolStripMenuItem(); _pauseItem.Click += (_, _) => { _paused = !_paused; UpdateMenu(); Invalidate(); };
+        _pauseItem = new ToolStripMenuItem(); _pauseItem.Click += (_, _) => SetPaused(!_paused);
         _resetItem = new ToolStripMenuItem(); _resetItem.Click += (_, _) => { _simulation.Reset(CurrentCenter()); Invalidate(); };
+        _settingsItem = new ToolStripMenuItem(); _settingsItem.Click += (_, _) => OpenSettings();
         _interactionItem = new ToolStripMenuItem { CheckOnClick = true }; _interactionItem.CheckedChanged += (_, _) => SetInteraction(_interactionItem.Checked);
-        _diagnosticsItem = new ToolStripMenuItem { CheckOnClick = true }; _diagnosticsItem.CheckedChanged += (_, _) => { _showDiagnostics = _diagnosticsItem.Checked; SaveConfig(); Invalidate(); };
+        _diagnosticsItem = new ToolStripMenuItem { CheckOnClick = true }; _diagnosticsItem.CheckedChanged += (_, _) => { _showDiagnostics = _diagnosticsItem.Checked; SaveConfig(); UpdateMenu(); Invalidate(); };
         _languageItem = new ToolStripMenuItem();
         _englishItem = new ToolStripMenuItem("English") { Checked = _config.Language == "en" };
         _frenchItem = new ToolStripMenuItem("Français") { Checked = _config.Language == "fr" };
         _englishItem.Click += (_, _) => SetLanguage("en"); _frenchItem.Click += (_, _) => SetLanguage("fr");
         _languageItem.DropDownItems.Add(_englishItem); _languageItem.DropDownItems.Add(_frenchItem);
         var exit = new ToolStripMenuItem(); exit.Click += (_, _) => { Close(); Application.ExitThread(); };
-        menu.Items.AddRange([_overlayItem, _pauseItem, _resetItem, new ToolStripSeparator(), _interactionItem, _diagnosticsItem, _languageItem, new ToolStripSeparator(), exit]);
+        menu.Items.AddRange([_overlayItem, _pauseItem, _resetItem, _settingsItem, new ToolStripSeparator(), _interactionItem, _diagnosticsItem, _languageItem, new ToolStripSeparator(), exit]);
         menu.Opening += (_, _) => UpdateMenu();
         return menu;
     }
@@ -102,12 +105,13 @@ internal sealed class FlyOverlayForm : Form
             var cursor = Cursor.Position;
             _cursorVelocity = new Vector2((cursor.X - _lastCursor.X) / dt, (cursor.Y - _lastCursor.Y) / dt);
             _lastCursor = cursor; _lastSampleTime = now;
-            _animationTime += dt;
+            if (!_paused) _animationTime += dt * _config.SimulationSpeedPercent / 100.0;
             if (!_paused)
             {
-                _simulationAccumulator = Math.Min(_simulationAccumulator + dt, 0.2);
+                _simulationAccumulator = Math.Min(_simulationAccumulator + dt * _config.SimulationSpeedPercent / 100.0, 0.2);
                 var stimulus = new StimulusSnapshot(new Vector2(cursor.X, cursor.Y), _cursorVelocity,
-                    new Vector2(_virtualBounds.Left, _virtualBounds.Top), new Vector2(_virtualBounds.Right, _virtualBounds.Bottom));
+                    new Vector2(_virtualBounds.Left, _virtualBounds.Top), new Vector2(_virtualBounds.Right, _virtualBounds.Bottom),
+                    CursorThreatEnabled: _config.CursorThreatEnabled);
                 const double fixedStep = 1.0 / 60.0;
                 while (_simulationAccumulator >= fixedStep)
                 {
@@ -131,6 +135,31 @@ internal sealed class FlyOverlayForm : Form
 
     private Vector2 CurrentCenter() => new(_virtualBounds.Left + _virtualBounds.Width / 2.0, _virtualBounds.Top + _virtualBounds.Height / 2.0);
 
+    private void SetPaused(bool paused)
+    {
+        _paused = paused; _config.StartPaused = paused; _simulationAccumulator = 0;
+        SaveConfig(); UpdateMenu(); Invalidate();
+    }
+
+    private void OpenSettings()
+    {
+        if (_settingsForm is null || _settingsForm.IsDisposed)
+        {
+            _settingsForm = new SettingsForm(_config, _text,
+                setPaused: SetPaused,
+                setSpeed: value => { _config.SimulationSpeedPercent = value; SaveConfig(); },
+                setFlySize: value => { _config.FlySize = value; SaveConfig(); Invalidate(); },
+                setCursorThreat: value => { _config.CursorThreatEnabled = value; SaveConfig(); },
+                setShowDiagnostics: value => { _showDiagnostics = value; SaveConfig(); UpdateMenu(); Invalidate(); },
+                resetSimulation: () => { _simulation.Reset(CurrentCenter()); Invalidate(); },
+                resetNeural: () => { _simulation.ResetNeural(); Invalidate(); },
+                snapshot: () => new SettingsSnapshot(_simulation.State, _simulation.ThreatLevel,
+                    _simulation.Position, _simulation.SensorySpikeCount, _simulation.MotorSpikeCount));
+            _settingsForm.FormClosed += (_, _) => _settingsForm = null;
+        }
+        _settingsForm.Show(); _settingsForm.BringToFront(); _settingsForm.Activate();
+    }
+
     private void SetInteraction(bool enabled)
     {
         _interactive = enabled;
@@ -147,8 +176,9 @@ internal sealed class FlyOverlayForm : Form
     private void SetLanguage(string language)
     {
         _config.Language = language; _text = new Strings(language); Text = _text.AppName; SaveConfig(); UpdateMenu();
-        _resetItem.Text = _text.Reset; _interactionItem.Text = _text.Interaction;
+        _resetItem.Text = _text.Reset; _settingsItem.Text = _text.Settings; _interactionItem.Text = _text.Interaction;
         _diagnosticsItem.Text = _text.Diagnostics; _languageItem.Text = _text.Language;
+        _settingsForm?.ApplyLanguage(_text);
         _englishItem.Checked = language == "en"; _frenchItem.Checked = language == "fr";
         _overlayItem.Text = Visible ? _text.HideOverlay : _text.ShowOverlay;
         Invalidate();
@@ -156,7 +186,7 @@ internal sealed class FlyOverlayForm : Form
 
     private void SaveConfig()
     {
-        try { _config.ShowDiagnostics = _showDiagnostics; _config.Save(_configPath); }
+        try { _config.ShowDiagnostics = _showDiagnostics; _config.StartPaused = _paused; _config.Save(_configPath); }
         catch (Exception ex) { _log.Write("WARN", "Could not save settings", ex); }
     }
 
@@ -165,9 +195,10 @@ internal sealed class FlyOverlayForm : Form
         if (_pauseItem is null) return;
         _overlayItem.Text = Visible ? _text.HideOverlay : _text.ShowOverlay;
         _pauseItem.Text = _paused ? _text.Resume : _text.Pause;
-        _resetItem.Text = _text.Reset;
+        _resetItem.Text = _text.Reset; _settingsItem.Text = _text.Settings;
         _interactionItem.Text = _text.Interaction; _interactionItem.Checked = _interactive;
         _diagnosticsItem.Text = _text.Diagnostics; _diagnosticsItem.Checked = _showDiagnostics;
+        _settingsForm?.SyncOverlayState(_paused, _showDiagnostics);
         _languageItem.Text = _text.Language;
         _tray.ContextMenuStrip!.Items.OfType<ToolStripMenuItem>().Last().Text = _text.Exit;
     }
@@ -240,7 +271,10 @@ internal sealed class FlyOverlayForm : Form
         base.OnMouseMove(e);
     }
     protected override void OnMouseUp(MouseEventArgs e) { _dragging = false; Capture = false; base.OnMouseUp(e); }
-    protected override void OnFormClosing(FormClosingEventArgs e) { _timer.Stop(); _tray.Visible = false; _tray.Dispose(); SaveConfig(); base.OnFormClosing(e); }
+    protected override void OnFormClosing(FormClosingEventArgs e)
+    {
+        _timer.Stop(); _settingsForm?.Close(); _tray.Visible = false; _tray.Dispose(); SaveConfig(); base.OnFormClosing(e);
+    }
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int index);
     [DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)] private static extern int SetWindowLong(IntPtr hWnd, int index, int value);

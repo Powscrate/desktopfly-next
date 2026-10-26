@@ -84,6 +84,13 @@ public sealed class FlySimulation
     public void Reset(Vector2 position)
     {
         Position = position; _velocity = Vector2.Zero; _escapeSeconds = 0; _wanderClock = 0; _lastThreat = 0; _motorEvents = 0;
-        State = FlyState.Explore; _circuit.Reset(); _heading = _random.NextDouble() * Math.PI * 2;
+        State = FlyState.Explore; ResetNeural(); _heading = _random.NextDouble() * Math.PI * 2;
+    }
+
+    /// <summary>Resets neural membrane state and spike counts without moving the fly.</summary>
+    public void ResetNeural()
+    {
+        _circuit.Reset();
+        _motorEvents = 0;
     }
 }

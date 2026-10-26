@@ -5,5 +5,7 @@
   "StartInTray": false,
   "ShowDiagnostics": true,
   "RandomSeed": 42,
-  "FlySize": 1
+  "FlySize": 1,
+  "SimulationSpeedPercent": 100,
+  "CursorThreatEnabled": true
 }

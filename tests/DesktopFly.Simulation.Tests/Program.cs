@@ -49,19 +49,23 @@ static void RunExperiment(string output)
 internal sealed class Tests
 {
     private int _passed;
+    private int _total;
     public void Run()
     {
         Test("LIF threshold, reset, and refractory", LifThresholdAndRefractory);
         Test("LIF rejects invalid integration step", LifRejectsInvalidStep);
         Test("cursor threat sensor bounded and distance-sensitive", ThreatSensor);
+        Test("disabled cursor threat sensor returns zero", ThreatSensorCanBeDisabled);
         Test("neural motor circuit causally triggers escape movement", ClosedLoopEscape);
+        Test("neural reset preserves body position", NeuralResetLeavesBody);
         Test("same seed produces reproducible movement", DeterministicReplay);
         Test("fly remains inside virtual desktop bounds", BoundaryConstraint);
         Test("configuration round-trips and validates language", ConfigurationRoundTrip);
-        Console.WriteLine($"{_passed}/7 checks passed.");
+        Console.WriteLine($"{_passed}/{_total} checks passed.");
     }
     private void Test(string name, Action action)
     {
+        _total++;
         try { action(); _passed++; Console.WriteLine($"PASS {name}"); }
         catch (Exception ex) { Console.Error.WriteLine($"FAIL {name}: {ex.Message}"); Environment.ExitCode = 1; }
     }
@@ -90,6 +94,13 @@ internal sealed class Tests
         Assert(near > far, "proximity should increase threat");
         Assert(near is >= 0 and <= 1, "threat must be normalized");
     }
+    private static void ThreatSensorCanBeDisabled()
+    {
+        var sensor = new CursorThreatSensor();
+        var environment = new StimulusSnapshot(new Vector2(200, 200), new Vector2(900, 0), Vector2.Zero,
+            new Vector2(1000, 800), CursorThreatEnabled: false);
+        Assert(sensor.Sample(new Vector2(200, 200), environment) == 0, "disabled cursor threat should be zero");
+    }
     private static void ClosedLoopEscape()
     {
         var sim = new FlySimulation(new Vector2(500, 400), 17);
@@ -99,6 +110,17 @@ internal sealed class Tests
         Assert(sim.SensorySpikeCount > 0, "sensory LIF never spiked");
         Assert(sim.MotorSpikeCount > 0 && sim.MotorEvents > 0, "threat did not cause neural motor output");
         Assert(sim.State == FlyState.Escape || Vector2.Distance(sim.Position, before) > 1, "neural output did not affect locomotion");
+    }
+    private static void NeuralResetLeavesBody()
+    {
+        var sim = new FlySimulation(new Vector2(500, 400), 23);
+        var environment = new StimulusSnapshot(new Vector2(500, 400), Vector2.Zero, Vector2.Zero, new Vector2(1000, 800));
+        for (var i = 0; i < 20; i++) sim.Step(1.0 / 60, environment);
+        var position = sim.Position;
+        Assert(sim.MotorSpikeCount > 0, "test stimulus did not activate the motor unit");
+        sim.ResetNeural();
+        Assert(sim.Position == position, "neural reset moved the fly");
+        Assert(sim.SensorySpikeCount == 0 && sim.MotorSpikeCount == 0, "neural counters were not reset");
     }
     private static void DeterministicReplay()
     {
@@ -127,6 +149,10 @@ internal sealed class Tests
             new AppConfiguration { Language = "fr", FlySize = 2 }.Save(path);
             var loaded = AppConfiguration.Load(path);
             Assert(loaded.Language == "fr" && loaded.FlySize == 2, "configuration values were not retained");
+            File.WriteAllText(path, "{\"SchemaVersion\":1,\"Language\":\"es\",\"FlySize\":9,\"SimulationSpeedPercent\":500}");
+            var sanitized = AppConfiguration.Load(path);
+            Assert(sanitized.Language == "en" && sanitized.FlySize == 3 && sanitized.SimulationSpeedPercent == 300,
+                "unsupported language or out-of-range settings were not sanitized");
         }
         finally { if (File.Exists(path)) File.Delete(path); }
     }

@@ -2,7 +2,8 @@ namespace DesktopFly.Simulation.Environment;
 
 /// <summary>Local-only coarse cursor stimulus; no pixels, windows, or typed input are observed.</summary>
 public readonly record struct StimulusSnapshot(Vector2 CursorPosition, Vector2 CursorVelocityPixelsPerSecond,
-    Vector2 VirtualDesktopMin, Vector2 VirtualDesktopMax, double LightLevel = 0.65, double FoodOdor = 0);
+    Vector2 VirtualDesktopMin, Vector2 VirtualDesktopMax, double LightLevel = 0.65, double FoodOdor = 0,
+    bool CursorThreatEnabled = true);
 
 public interface IThreatSensor
 {
@@ -14,6 +15,7 @@ public sealed class CursorThreatSensor : IThreatSensor
 {
     public double Sample(Vector2 flyPosition, StimulusSnapshot environment)
     {
+        if (!environment.CursorThreatEnabled) return 0;
         var distance = Vector2.Distance(flyPosition, environment.CursorPosition);
         var proximity = Math.Clamp(1 - distance / 260.0, 0, 1);
         var approachSpeed = environment.CursorVelocityPixelsPerSecond.Length;
