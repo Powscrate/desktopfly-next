@@ -193,7 +193,7 @@ internal sealed class FlyOverlayForm : Form
     private void DrawFly(Graphics g)
     {
         var phase = _animationTime * (2 + Math.Min(_simulation.Speed / 30, 2));
-        var gait = Math.Sin(phase) * 3.8f;
+        var gait = (float)Math.Sin(phase) * 3.8f;
         using var leg = new Pen(Color.FromArgb(255, 54, 44, 39), 1.5f);
         using var wing = new SolidBrush(Color.FromArgb(110, 190, 218, 220));
         using var wingLine = new Pen(Color.FromArgb(150, 112, 151, 158), 0.65f);
