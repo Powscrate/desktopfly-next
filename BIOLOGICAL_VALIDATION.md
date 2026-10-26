@@ -2,7 +2,7 @@
 
 ## Claims supported by this prototype
 
-- The visible subject is inspired by the fruit fly *Drosophila melanogaster*.
+- The app now bundles a scan-derived NeuroMechFly v2 geometry asset for adult female *Drosophila melanogaster*; upstream documentation identifies the biomechanical model as based on a micro-CT scan of a real adult female fly. The current GDI+ renderer still shows its procedural 2D approximation; the GLB is not yet rendered by the app.
 - A leaky integrate-and-fire abstraction is used for two computational units.
 - A stimulus variable is integrated to threshold, producing discrete spikes; a second spiking unit receives excitatory input and affects simulated movement.
 

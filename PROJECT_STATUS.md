@@ -12,12 +12,12 @@ A first source-level vertical slice exists: native Windows overlay code, a depen
 | --- | --- | --- |
 | 1. Foundation | Partial | Solution/project structure, JSON config validation, rotating log, version and assertion executable; user has built the core/app on Windows .NET 8.0.427. |
 | 2. Windows integration | Partially user-verified | User reports the overlay appeared and avoided the cursor; the tray controls/settings previously tested work. Multi-monitor, mixed-DPI, sleep/resume and accessibility remain unverified. |
-| 3. Fly appearance | Prototype | Procedural 2D GDI+ fly with body, eyes, antennae, six leg strokes, wing membranes/veins. No 3D model or validated anatomy. |
+| 3. Fly appearance | Prototype / asset sourced | The current renderer remains procedural 2D. A micro-CT-derived NeuroMechFly v2 GLB (69 named mesh parts, Apache-2.0, provenance documented) is bundled but not yet loaded or rendered. |
 | 4. Physical movement | Partial | Velocity, heading, fixed-ish update, virtual-screen clamp/reflection and escape impulse. No contact surfaces, collision geometry or true flight. |
 | 5. Environmental perception | Partial | Local cursor proximity/movement only, now user-toggleable. No screen capture. Other requested modalities absent. |
 | 6. Behavior | Partial | Explore, escape, rest software states; simple seeded wandering. No grooming, hunger/fatigue or extensible behavior tree. |
 | 7. Neural engine | Minimal proof-of-concept | LIF and two-cell circuit; no general sparse network, delays, spike raster, adaptation or large-circuit import. |
-| 8. Connectome | Not started | No third-party dataset bundled. |
+| 8. Connectome | Not started | No neural connectome dataset bundled. The separate 3D mesh is biological geometry, not neural connectivity. |
 | 9. Neural motor integration | Minimal | Motor spikes add an escape velocity impulse; explicit approximation, not a documented biological mapping. |
 | 10. Closed loop | Minimal | Cursor-driven threat experiment is encoded and exportable through a CLI runner. |
 | 11. Advanced realism | Not started | |
