@@ -57,7 +57,7 @@ internal sealed class FlySpriteOverlayForm : Form
     }
 
     public void Present(Vector2 center, double headingRadians, float scale,
-        double stridePhase, bool walking, double wingPhase, bool flying)
+        ReadOnlySpan<FlyLegJointPose> legPoses, double wingPhase, bool flying)
     {
         if (IsDisposed) return;
         if (!IsHandleCreated) _ = Handle;
@@ -78,7 +78,7 @@ internal sealed class FlySpriteOverlayForm : Form
             graphics.ScaleTransform(scale * (flying ? 1.07f : 1f), scale * (flying ? 1.07f : 1f));
             DrawWings(graphics, wingPhase, flying);
             _sprite.Draw(graphics, new RectangleF(-42, -34, 84, 68));
-            DrawLegs(graphics, stridePhase, walking);
+            DrawLegs(graphics, legPoses, flying);
         }
 
         var data = _canvas.LockBits(new Rectangle(0, 0, CanvasSize, CanvasSize),
@@ -125,10 +125,29 @@ internal sealed class FlySpriteOverlayForm : Form
 
     private static void DrawWings(Graphics graphics, double phase, bool flying)
     {
-        var sweep = flying ? Math.Sin(phase) : 0;
-        var lift = flying ? Math.Cos(phase) : 0;
-        using var fill = new SolidBrush(Color.FromArgb(flying ? 105 : 70, 205, 216, 212));
-        using var outline = new Pen(Color.FromArgb(flying ? 175 : 120, 89, 101, 96), 0.9f);
+        using var fill = new SolidBrush(Color.FromArgb(70, 205, 216, 212));
+        using var outline = new Pen(Color.FromArgb(120, 89, 101, 96), 0.9f);
+        if (!flying)
+        {
+            DrawWingPose(graphics, fill, outline, 0, 70, 110);
+            return;
+        }
+
+        // Fly wings beat near 200 Hz—far above the desktop refresh rate. Render a
+        // soft phase-integrated fan rather than pretending the 60 Hz screen shows
+        // individual real wing strokes.
+        for (var sample = 1; sample < 5; sample++)
+            DrawWingPose(graphics, fill, outline, phase + sample * Math.PI * 0.4, 18, 38);
+        DrawWingPose(graphics, fill, outline, phase, 58, 120);
+    }
+
+    private static void DrawWingPose(Graphics graphics, SolidBrush fill, Pen outline,
+        double phase, int fillAlpha, int lineAlpha)
+    {
+        var sweep = Math.Sin(phase);
+        var lift = Math.Cos(phase);
+        fill.Color = Color.FromArgb(fillAlpha, 205, 216, 212);
+        outline.Color = Color.FromArgb(lineAlpha, 89, 101, 96);
         foreach (var side in new[] { -1f, 1f })
         {
             var root = new PointF(side * 2.2f, -3.4f);
@@ -145,30 +164,48 @@ internal sealed class FlySpriteOverlayForm : Form
         }
     }
 
-    private static void DrawLegs(Graphics graphics, double phase, bool walking)
+    private static void DrawLegs(Graphics graphics, ReadOnlySpan<FlyLegJointPose> poses, bool flying)
     {
-        using var pen = new Pen(Color.FromArgb(220, 67, 45, 37), 1.45f)
+        if (poses.Length != RecordedLegGait.LegCount)
+            throw new ArgumentException("Six recorded leg poses are required.", nameof(poses));
+        using var upper = new Pen(Color.FromArgb(230, 69, 46, 36), 1.65f)
         {
-            StartCap = LineCap.Round,
-            EndCap = LineCap.Round,
-            LineJoin = LineJoin.Round
+            StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round
         };
-        foreach (var side in new[] { -1f, 1f })
-        for (var pair = 0; pair < 3; pair++)
+        using var lower = new Pen(Color.FromArgb(225, 91, 61, 46), 1.25f)
         {
-            var localPhase = phase + (pair == 1 ? Math.PI : 0) + (side > 0 ? Math.PI : 0);
-            var stride = walking ? (float)Math.Cos(localPhase) * 3.2f : 0;
-            var lift = walking ? Math.Max(0, (float)Math.Sin(localPhase)) * 1.3f : 0;
-            var baseY = (pair - 1) * 2.7f;
-            var root = new PointF(side * 2.8f, baseY);
-            var coxa = new PointF(side * (6.0f + lift), baseY + stride * 0.25f);
-            var knee = new PointF(side * (10.2f + lift), baseY + stride * 0.7f - lift);
-            var foot = new PointF(side * (15.5f + lift), baseY + stride);
-            graphics.DrawLine(pen, root, coxa);
-            graphics.DrawLine(pen, coxa, knee);
-            graphics.DrawLine(pen, knee, foot);
+            StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round
+        };
+        using var joints = new SolidBrush(Color.FromArgb(235, 66, 43, 34));
+        var tuck = flying ? 0.76f : 1f;
+        for (var leg = 0; leg < poses.Length; leg++)
+        {
+            var pose = poses[leg];
+            var side = leg % 2 == 0 ? -1f : 1f; // RF/LF, RM/LM, RH/LH
+            var pair = leg / 2;
+            var baseY = 4.5f - pair * 4.5f;
+            var root = new PointF(side * 3.4f, baseY);
+            var outward = side < 0 ? Math.PI : 0;
+            var coxaAngle = outward + pose.CoxaYaw * 0.82 + pose.CoxaRoll * 0.10;
+            var coxa = Extend(root, 3.4f * tuck, coxaAngle);
+            var femurAngle = coxaAngle + pose.CoxaPitch * 0.45 + pose.FemurPitch * 0.60
+                + pose.FemurRoll * 0.18 + (flying ? side * 0.12 : 0);
+            var knee = Extend(coxa, 5.7f * tuck, femurAngle);
+            var tibiaAngle = femurAngle + pose.TibiaPitch * 0.62 + (flying ? -side * 0.18 : 0);
+            var ankle = Extend(knee, 7.0f * tuck, tibiaAngle);
+            var tarsusAngle = tibiaAngle + pose.TarsusPitch * 0.32;
+            var foot = Extend(ankle, 4.4f * tuck, tarsusAngle);
+            graphics.DrawLine(upper, root, coxa);
+            graphics.DrawLine(upper, coxa, knee);
+            graphics.DrawLine(lower, knee, ankle);
+            graphics.DrawLine(lower, ankle, foot);
+            graphics.FillEllipse(joints, knee.X - 1.05f, knee.Y - 1.05f, 2.1f, 2.1f);
+            graphics.FillEllipse(joints, ankle.X - 0.85f, ankle.Y - 0.85f, 1.7f, 1.7f);
         }
     }
+
+    private static PointF Extend(PointF start, float length, double angle) =>
+        new(start.X + (float)Math.Cos(angle) * length, start.Y + (float)Math.Sin(angle) * length);
 
     private void EnsureDib()
     {

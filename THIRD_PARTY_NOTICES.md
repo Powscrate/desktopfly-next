@@ -6,6 +6,10 @@ The files `data/neural/malecns-locomotor-v1.json` and `data/neural/malecns-locom
 
 The bounded subgraph/report were sourced from Denis Shiryaev's `desktop-fly` repository, commit `32b00011e83c3dc85fa3ea0b3934155b04f1635d`, where the MaleCNS-only addition is separately identified as CC BY 4.0. No FlyWire-derived CC BY-NC 4.0 graph or point data from that repository is included.
 
+## FlyGym walking-kinematics trace
+
+`data/locomotion/flygym-untethered-step-v1.json` is converted from FlyGym 2.1.1's `single_steps_untethered.pkl`, sourced from NeLy-EPFL/FlyGym commit `a63dc91a7ce432452e6521c2f3dcc1a7c2c7c6bc`. The FlyGym project is Apache-2.0; its license text is included at `licenses/FlyGym-Apache-2.0.txt`. Credit the NeuroMechFly/FlyGym team. The FlyGym repository's top-level Apache-2.0 license is included, but separate licensing terms for the underlying 3D-pose recording have not been independently verified; we do not claim to relicense that original recording. The kinematics source and conversion limits are documented in `data/locomotion/README.md`.
+
 ## Application/runtime
 
 There are no third-party NuGet dependencies. The runtime fly image is user-provided artwork at `assets/sprites/fly/` and is embedded as a transparent PNG resource. The former NeuroMechFly GLB model and renderer assets have been removed at the user's request. The app is offline-first and does not make runtime network requests.

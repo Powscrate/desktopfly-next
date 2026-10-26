@@ -5,5 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\..\data\neural\malecns-locomotor-v1.json" LogicalName="DesktopFly.Simulation.malecns-locomotor-v1.json" />
+    <EmbeddedResource Include="..\..\data\locomotion\flygym-untethered-step-v1.json" LogicalName="DesktopFly.Simulation.flygym-untethered-step-v1.json" />
   </ItemGroup>
 </Project>

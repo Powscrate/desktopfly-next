@@ -55,6 +55,7 @@ internal sealed class Tests
         Test("cursor threat sensor bounded and distance-sensitive", ThreatSensor);
         Test("disabled cursor threat sensor returns zero", ThreatSensorCanBeDisabled);
         Test("MaleCNS v1.0 subgraph loads and recruits motor neurons", MaleCnsCircuit);
+        Test("FlyGym recorded six-leg kinematics load and cycle", RecordedGait);
         Test("connectome-driven locomotion and threat escape", ClosedLoopEscape);
         Test("walking gait and flight wing phases advance", GaitAndFlightAnimation);
         Test("surface walking alternates with modeled rest bouts", WalkRestBouts);
@@ -98,6 +99,18 @@ internal sealed class Tests
         Assert(circuit.TotalSpikes > 0 && circuit.MotorSpikes > 0,
             "descending drive failed to recruit the measured leg circuit");
         Assert(circuit.MeanMotorActivation > 0, "motor population rate did not reach the body interface");
+    }
+    private static void RecordedGait()
+    {
+        var gait = new RecordedLegGait();
+        Assert(gait.FrameCount == 45 && Math.Abs(gait.CycleDurationSeconds - 0.135) < 1e-9,
+            "recorded FlyGym cycle metadata differs from its source");
+        Assert(gait.LegOrder.Count == 6 && gait.CycleFrequencyHz is > 7 and < 8,
+            "recorded step should preserve six leg traces at its source frequency");
+        var stance = gait.Sample(0, 0);
+        var oppositePhase = gait.Sample(0, Math.PI);
+        Assert(Math.Abs(stance.FemurPitch - oppositePhase.FemurPitch) > 0.05,
+            "recorded leg joint angles did not change over the step cycle");
     }
     private static void ClosedLoopEscape()
     {

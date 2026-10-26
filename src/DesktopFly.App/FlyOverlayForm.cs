@@ -255,8 +255,7 @@ internal sealed class FlyOverlayForm : Form
         try
         {
             _flySpriteWindow.Present(_simulation.Position, _simulation.HeadingRadians,
-                _config.FlySize * 0.85f, _simulation.StridePhase, _simulation.IsWalking,
-                _simulation.WingPhase, _simulation.IsFlying);
+                _config.FlySize * 0.85f, _simulation.LegPoses, _simulation.WingPhase, _simulation.IsFlying);
         }
         catch (Exception ex)
         {

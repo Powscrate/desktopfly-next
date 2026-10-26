@@ -15,4 +15,4 @@ The graph contains 1,045 cells and 17,224 retained directed connections (708,689
 
 ## Interpretation limits
 
-Measured anatomy/contact counts do not specify effective synaptic conductance, transmitter effect, single-neuron sensory tuning, muscle forces, or gait. The runtime's transmitter signs, normalized edge weights, one-millisecond LIF dynamics, sensory/body interface, descending command mappings, and tripod gait pattern are modeled assumptions. The subgraph is leg locomotor anatomy and has no wing/flight circuit. Do not describe the rendered movement as an experimentally validated behavior.
+Measured anatomy/contact counts do not specify effective synaptic conductance, transmitter effect, single-neuron sensory tuning, muscle forces, or gait. The runtime's transmitter signs, normalized edge weights, one-millisecond LIF dynamics, sensory/body interface, descending command mappings, and phase-based contact feedback are modeled assumptions. The subgraph is leg locomotor anatomy and has no wing/flight circuit. Do not describe the rendered movement as an experimentally validated behavior.

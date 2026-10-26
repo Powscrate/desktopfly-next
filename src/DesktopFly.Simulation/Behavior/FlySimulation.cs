@@ -7,13 +7,16 @@ public enum FlyState { Explore, Escape, Rest }
 
 /// <summary>
 /// Desktop-surface locomotion driven by a bounded MaleCNS leg-circuit model.
-/// A compact tripod gait and the flight/wing policy are declared body-model
-/// assumptions; the bundled anatomical graph contains leg, not wing, neurons.
+/// A recorded walking step is projected into simplified 2D leg strokes; flight
+/// and wing policy remain body-model assumptions. The anatomical graph contains
+/// leg, not wing, neurons.
 /// </summary>
 public sealed class FlySimulation
 {
     private readonly IThreatSensor _sensor;
     private readonly MaleCnsLocomotionCircuit _circuit = new();
+    private readonly RecordedLegGait _legGait = new();
+    private readonly FlyLegJointPose[] _legPoses = new FlyLegJointPose[RecordedLegGait.LegCount];
     private readonly Random _random;
     private Vector2 _velocity;
     private double _escapeSeconds;
@@ -44,6 +47,8 @@ public sealed class FlySimulation
     public bool IsWalking => State == FlyState.Explore && Speed > 1;
     public bool IsFlying => State == FlyState.Escape;
     public double MotorActivity => _circuit.MeanMotorActivation;
+    public double GaitCycleFrequencyHz => _legGait.CycleFrequencyHz;
+    public ReadOnlySpan<FlyLegJointPose> LegPoses => _legPoses;
     public int NeuralNeuronCount => _circuit.NeuronCount;
     public int NeuralConnectionCount => _circuit.ConnectionCount;
 
@@ -54,6 +59,8 @@ public sealed class FlySimulation
         _sensor = sensor ?? new CursorThreatSensor();
         _heading = _random.NextDouble() * Math.PI * 2;
         _walkBoutRemaining = NextWalkBout();
+        for (var leg = 0; leg < _legPoses.Length; leg++)
+            _legPoses[leg] = _legGait.Sample(leg, _stridePhase);
     }
 
     public void Step(double dtSeconds, StimulusSnapshot environment)
@@ -119,8 +126,8 @@ public sealed class FlySimulation
         {
             for (var leg = 0; leg < 6; leg++)
             {
-                // Alternating tripod phase is a kinematic gait template, not a
-                // connectome-derived oscillator or experimental replay.
+                // The source step has no measured foot-force channel; contact and
+                // sensory feedback remain a coarse phase-based proxy.
                 var phase = _stridePhase + ((leg is 0 or 3 or 4) ? 0 : Math.PI);
                 _legContacts[leg] = Math.Cos(phase) > 0 ? 0.75 : 0.08;
                 _legMotion[leg] = Math.Abs(Math.Sin(phase));
@@ -136,7 +143,9 @@ public sealed class FlySimulation
 
         if (State == FlyState.Explore)
         {
-            var strideRate = 5.5 + 5.0 * _circuit.MeanMotorActivation;
+            // Recorded step timing is the nominal rhythm; connectome motor activity
+            // modulates its rate through an explicit, uncalibrated body interface.
+            var strideRate = _legGait.CycleFrequencyHz * (0.85 + 0.30 * _circuit.MeanMotorActivation);
             _stridePhase = WrapPhase(_stridePhase + dtSeconds * Math.PI * 2 * strideRate);
             var walkingSpeed = 17 + 15 * _circuit.MeanMotorActivation;
             var desired = new Vector2(Math.Cos(_heading), Math.Sin(_heading)) * walkingSpeed;
@@ -154,7 +163,7 @@ public sealed class FlySimulation
         }
 
         if (State == FlyState.Escape)
-            _wingPhase = WrapPhase(_wingPhase + dtSeconds * Math.PI * 2 * 28);
+            _wingPhase = WrapPhase(_wingPhase + dtSeconds * Math.PI * 2 * 200);
         else
             _wingPhase = WrapPhase(_wingPhase + (0 - _wingPhase) * Math.Min(1, dtSeconds * 9));
 
@@ -171,6 +180,8 @@ public sealed class FlySimulation
                 ? new Vector2(Math.Cos(_heading), Math.Sin(_heading)) * 112
                 : Vector2.Zero;
         }
+        for (var leg = 0; leg < _legPoses.Length; leg++)
+            _legPoses[leg] = _legGait.Sample(leg, _stridePhase);
     }
 
     public void Reset(Vector2 position)
@@ -185,6 +196,8 @@ public sealed class FlySimulation
         State = FlyState.Explore;
         ResetNeural();
         _heading = _random.NextDouble() * Math.PI * 2;
+        for (var leg = 0; leg < _legPoses.Length; leg++)
+            _legPoses[leg] = _legGait.Sample(leg, _stridePhase);
     }
 
     /// <summary>Resets neural membrane state and spike counts without moving the fly.</summary>

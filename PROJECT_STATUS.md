@@ -4,7 +4,7 @@ Updated 2026-10-26.
 
 ## Summary
 
-The current source has a native Windows overlay, the supplied overhead raster fly, procedural leg/wing animation, and an offline MaleCNS v1.0-derived leg locomotor subgraph. The 1,045-neuron/17,224-edge graph is measured anatomy, while its LIF dynamics, body mapping, gait, cursor response and wing animation remain modeled assumptions. This is still an early prototype, not a validated fly simulation.
+The current source has a native Windows overlay, the supplied overhead raster fly, a FlyGym walking-trace-based 2D leg animation, a modeled wing overlay, and an offline MaleCNS v1.0-derived leg locomotor subgraph. The 1,045-neuron/17,224-edge graph is measured anatomy, while its LIF dynamics, body mapping, gait, cursor response and wing animation remain modeled assumptions. This is still an early prototype, not a validated fly simulation.
 
 ## Phase tracker
 
@@ -12,22 +12,22 @@ The current source has a native Windows overlay, the supplied overhead raster fl
 | --- | --- | --- |
 | 1. Foundation | Partial | Solution/project structure, JSON config validation, rotating log, version and assertion executable. |
 | 2. Windows integration | Partially user-verified | Earlier user tests confirmed overlay/tray/settings behavior. Current animation and connectome resource hookup have not been built/run on Windows. Multi-monitor, mixed-DPI, sleep/resume and accessibility remain unverified. |
-| 3. Fly appearance | Source implementation complete; Windows verification pending | Runtime uses supplied 56×57 top view; GLB renderer/model assets remain removed. Pale wing pixels are separated, with procedural wing/leg overlays and a small flight zoom. Visual artifacts and alignment need Windows validation. |
-| 4. Physical movement | Partial | Planar surface walking with strong traction, short 3–8 s walk bouts alternating with 1–3 s rests, turns, screen bounds, and brief escape flight state. Durations are authored assumptions, not fitted biological data. No desktop surface geometry, foot-force mechanics, collision geometry or flight physics. |
+| 3. Fly appearance | Source implementation complete; Windows verification pending | Runtime uses supplied 56×57 top view; GLB renderer/model assets remain removed. Six-leg limb motion replays one FlyGym walking-step trace through a simplified 2D projection; a high-frequency wing fan and small flight zoom are overlays. Visual artifacts and alignment need Windows validation. |
+| 4. Physical movement | Partial | Planar surface movement with strong traction, a recorded six-leg joint-angle step cycle, short 3–8 s walk bouts alternating with 1–3 s rests, turns, screen bounds, and brief escape flight state. Bout durations/body movement are assumptions, not fitted behavior data. No desktop surface geometry, foot-force mechanics, collision geometry or flight physics. |
 | 5. Environmental perception | Partial | Local cursor proximity/movement only, user-toggleable. No screen capture. Other modalities absent. |
 | 6. Behavior | Partial | Explore, escape, rest software states; seeded surface wandering and cursor response. The policy is modeled, not an identified biological escape pathway. |
 | 7. Neural engine | Partial research prototype | Sparse 1 ms LIF-style integration over a fixed 1,045-node, 17,224-edge subgraph. No general network importer, synaptic delays, detailed conductance model, or profiling. |
 | 8. Connectome | Bounded subgraph integrated | MaleCNS v1.0 CC BY 4.0 leg-locomotor selection; not the full CNS. Extraction, checksum, credit, source roles and omitted-data limitations documented. No FlyWire CC BY-NC dataset copied. |
-| 9. Neural/body integration | Partial, explicitly assumed | DNa02/MDN drive, coarse leg sensory interface, motor-rate-to-gait mapping and transmitter signs are modeled mappings, not validation. Wingbeat is visual only and is not driven by the leg graph. |
+| 9. Neural/body integration | Partial, explicitly assumed | DNa02/MDN drive, coarse leg sensory interface, motor-rate-to-step-frequency mapping and transmitter signs are modeled. The leg trace is FlyGym recording-derived; 2D projection is approximate. Wingbeat is visual only and is not driven by the leg graph. |
 | 10. Closed loop | Partial | Cursor signal, network and motor activity are exercised by headless checks/CSV scenario; biological closed-loop equivalence is not claimed. |
-| 11. Appearance/animation | Source implementation complete; verification pending | Supplied body image with procedural legs and wing motion; gait and flight imagery are not calibrated to measured kinematics. |
+| 11. Appearance/animation | Source implementation complete; verification pending | Supplied body image with a recorded FlyGym step trace projected into 2D leg strokes and a literature-based blurred wingbeat display; the projection and flight imagery are not a calibrated full-body replay. |
 | 12. UI/scientific tools | Partial | Tray controls, non-modal settings/live diagnostics, reset, and English/French strings. No neuron explorer or experiment UI. |
 
 ## Build and tests
 
 - Environment: Linux x86_64; no `dotnet`, MSBuild, C# compiler, Mono, or Windows desktop runtime is available.
 - Build status: not run for this change. Do not infer validation from earlier builds; new connectome resource, simulation and sprite animation require Windows build verification.
-- Automated test status: 10 headless checks are authored but not run here. They check data counts/recruitment, behavior, determinism, bounds and settings; they do not validate biology.
+- Automated test status: 11 headless checks are authored but not run here. They check data counts/recruitment, behavior, determinism, bounds and settings; they do not validate biology.
 - UI/performance status: current animated sprite, network runtime cost, transparency, wing separation, DPI positioning and visual behavior have not been measured.
 
 ## Known limitations / next actions
