@@ -19,6 +19,8 @@ public sealed class FlySimulation
     private double _escapeSeconds;
     private double _escapeCooldown;
     private double _wanderClock;
+    private double _walkBoutRemaining;
+    private double _restBoutRemaining;
     private double _heading;
     private double _lastThreat;
     private double _previousThreat;
@@ -51,6 +53,7 @@ public sealed class FlySimulation
         _random = new Random(randomSeed);
         _sensor = sensor ?? new CursorThreatSensor();
         _heading = _random.NextDouble() * Math.PI * 2;
+        _walkBoutRemaining = NextWalkBout();
     }
 
     public void Step(double dtSeconds, StimulusSnapshot environment)
@@ -71,7 +74,33 @@ public sealed class FlySimulation
         }
         _previousThreat = _lastThreat;
         _escapeSeconds = Math.Max(0, _escapeSeconds - dtSeconds);
-        State = _escapeSeconds > 0 ? FlyState.Escape : _lastThreat > 0.84 ? FlyState.Rest : FlyState.Explore;
+        if (_escapeSeconds > 0)
+        {
+            State = FlyState.Escape;
+        }
+        else if (_lastThreat > 0.84)
+        {
+            State = FlyState.Rest;
+        }
+        else if (_restBoutRemaining > 0)
+        {
+            _restBoutRemaining = Math.Max(0, _restBoutRemaining - dtSeconds);
+            State = FlyState.Rest;
+            if (_restBoutRemaining == 0) _walkBoutRemaining = NextWalkBout();
+        }
+        else
+        {
+            _walkBoutRemaining -= dtSeconds;
+            if (_walkBoutRemaining <= 0)
+            {
+                _restBoutRemaining = NextRestBout();
+                State = FlyState.Rest;
+            }
+            else
+            {
+                State = FlyState.Explore;
+            }
+        }
 
         if (State == FlyState.Explore)
         {
@@ -149,6 +178,8 @@ public sealed class FlySimulation
         Position = position;
         _velocity = Vector2.Zero;
         _escapeSeconds = _escapeCooldown = _wanderClock = _lastThreat = _previousThreat = 0;
+        _restBoutRemaining = 0;
+        _walkBoutRemaining = NextWalkBout();
         _stridePhase = _wingPhase = _neuralRemainderMs = 0;
         _motorEvents = 0;
         State = FlyState.Explore;
@@ -162,6 +193,11 @@ public sealed class FlySimulation
         _circuit.Reset();
         _motorEvents = 0;
     }
+
+    // These bouts are an explicit product-level behavior prior, not durations
+    // fitted to a fly-behavior dataset.
+    private double NextWalkBout() => 3.0 + _random.NextDouble() * 5.0;
+    private double NextRestBout() => 1.0 + _random.NextDouble() * 2.0;
 
     private static double WrapPhase(double phase)
     {

@@ -9,7 +9,7 @@ DesktopFly Next is an offline-first Windows desktop-fly simulation, currently an
 - Windows 10/11, x64 native WinForms overlay: borderless, always-on-top, virtual-desktop bounds, transparent background, click-through by default, optional grab/drag interaction, tray controls, local settings/logs, and English/French UI.
 - A non-modal settings and diagnostics window with live state/threat/position/spike counts; adjustable simulation speed and fly size; pause, cursor-avoidance and desktop-diagnostics toggles; independent neural reset.
 - A headless simulation embedding a bounded **MaleCNS v1.0 male Drosophila leg-locomotor subgraph**: 1,045 neurons and 17,224 measured directed connections. A sparse LIF-style model with explicit parameter assumptions drives a six-leg body interface. Source, license, extraction, and checksum are documented in [`DATA_PROVENANCE.md`](DATA_PROVENANCE.md) and [`data/neural/README.md`](data/neural/README.md).
-- Procedural six-leg motion, persistent surface walking with firm ground traction and turns, brief cursor-triggered escape, and animated wings/temporary modest zoom during escape. The supplied overhead raster is retained as the body artwork; art animation, tripod phase, body mechanics, cursor response, and wingbeat are illustrative modeling choices, not measured kinematics. The bundled neural graph is leg-only and does not drive wings.
+- Procedural six-leg motion, short surface-walking bouts (modeled 3–8 s durations) alternating with 1–3 s rests, brief cursor-triggered escape, and animated wings/temporary modest zoom during escape. The supplied overhead raster is retained as the body artwork; art animation, tripod phase, body mechanics, cursor response, and wingbeat are illustrative modeling choices, not measured kinematics. The bundled neural graph is leg-only and does not drive wings.
 - Offline runtime and no third-party NuGet packages. No screen capture, window-content inspection, keyboard logging, telemetry, or network requests.
 
 ## Build and run (Windows)
@@ -29,7 +29,7 @@ dotnet run --project tests/DesktopFly.Simulation.Tests/DesktopFly.Simulation.Tes
 dotnet run --project tests/DesktopFly.Simulation.Tests/DesktopFly.Simulation.Tests.csproj -- --experiment experiments/closed-loop-export.csv
 ```
 
-The first command runs deterministic headless assertions without external test packages, including graph counts/motor recruitment, surface gait, flight animation phase, deterministic replay, bounds, configuration, and cursor response. The second writes a CSV of a reproducible cursor-approach experiment. A scenario description is in [`experiments/closed-loop-cursor-threat.json`](experiments/closed-loop-cursor-threat.json).
+The first command runs deterministic headless assertions without external test packages, including graph counts/motor recruitment, surface gait, walk/rest bouts, flight animation phase, deterministic replay, bounds, configuration, and cursor response. The second writes a CSV of a reproducible cursor-approach experiment. A scenario description is in [`experiments/closed-loop-cursor-threat.json`](experiments/closed-loop-cursor-threat.json).
 
 ## Honest scope and limitations
 

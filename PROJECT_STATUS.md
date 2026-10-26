@@ -13,7 +13,7 @@ The current source has a native Windows overlay, the supplied overhead raster fl
 | 1. Foundation | Partial | Solution/project structure, JSON config validation, rotating log, version and assertion executable. |
 | 2. Windows integration | Partially user-verified | Earlier user tests confirmed overlay/tray/settings behavior. Current animation and connectome resource hookup have not been built/run on Windows. Multi-monitor, mixed-DPI, sleep/resume and accessibility remain unverified. |
 | 3. Fly appearance | Source implementation complete; Windows verification pending | Runtime uses supplied 56×57 top view; GLB renderer/model assets remain removed. Pale wing pixels are separated, with procedural wing/leg overlays and a small flight zoom. Visual artifacts and alignment need Windows validation. |
-| 4. Physical movement | Partial | Planar surface walking with strong traction, persistent turns, screen bounds, and brief escape flight state. No desktop surface geometry, foot-force mechanics, collision geometry or flight physics. |
+| 4. Physical movement | Partial | Planar surface walking with strong traction, short 3–8 s walk bouts alternating with 1–3 s rests, turns, screen bounds, and brief escape flight state. Durations are authored assumptions, not fitted biological data. No desktop surface geometry, foot-force mechanics, collision geometry or flight physics. |
 | 5. Environmental perception | Partial | Local cursor proximity/movement only, user-toggleable. No screen capture. Other modalities absent. |
 | 6. Behavior | Partial | Explore, escape, rest software states; seeded surface wandering and cursor response. The policy is modeled, not an identified biological escape pathway. |
 | 7. Neural engine | Partial research prototype | Sparse 1 ms LIF-style integration over a fixed 1,045-node, 17,224-edge subgraph. No general network importer, synaptic delays, detailed conductance model, or profiling. |
@@ -27,7 +27,7 @@ The current source has a native Windows overlay, the supplied overhead raster fl
 
 - Environment: Linux x86_64; no `dotnet`, MSBuild, C# compiler, Mono, or Windows desktop runtime is available.
 - Build status: not run for this change. Do not infer validation from earlier builds; new connectome resource, simulation and sprite animation require Windows build verification.
-- Automated test status: 9 headless checks are authored but not run here. They check data counts/recruitment, behavior, determinism, bounds and settings; they do not validate biology.
+- Automated test status: 10 headless checks are authored but not run here. They check data counts/recruitment, behavior, determinism, bounds and settings; they do not validate biology.
 - UI/performance status: current animated sprite, network runtime cost, transparency, wing separation, DPI positioning and visual behavior have not been measured.
 
 ## Known limitations / next actions

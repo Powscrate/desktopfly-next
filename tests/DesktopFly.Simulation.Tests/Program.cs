@@ -57,6 +57,7 @@ internal sealed class Tests
         Test("MaleCNS v1.0 subgraph loads and recruits motor neurons", MaleCnsCircuit);
         Test("connectome-driven locomotion and threat escape", ClosedLoopEscape);
         Test("walking gait and flight wing phases advance", GaitAndFlightAnimation);
+        Test("surface walking alternates with modeled rest bouts", WalkRestBouts);
         Test("neural reset preserves body position", NeuralResetLeavesBody);
         Test("same seed produces reproducible movement", DeterministicReplay);
         Test("fly remains inside virtual desktop bounds", BoundaryConstraint);
@@ -122,6 +123,22 @@ internal sealed class Tests
         var threat = surface with { CursorPosition = sim.Position, CursorThreatEnabled = true };
         sim.Step(1.0 / 60, threat);
         Assert(sim.IsFlying && sim.WingPhase > 0, "escape did not animate wings or signal brief flight");
+    }
+    private static void WalkRestBouts()
+    {
+        var sim = new FlySimulation(new Vector2(500, 400), 71);
+        var environment = new StimulusSnapshot(new Vector2(900, 700), Vector2.Zero, Vector2.Zero,
+            new Vector2(1000, 800), CursorThreatEnabled: false);
+        var walkingFrames = 0;
+        var restingFrames = 0;
+        for (var i = 0; i < 1800; i++)
+        {
+            sim.Step(1.0 / 60, environment);
+            if (sim.State == FlyState.Explore) walkingFrames++;
+            if (sim.State == FlyState.Rest) restingFrames++;
+        }
+        Assert(walkingFrames > 0 && restingFrames > 0,
+            "a 30-second no-threat scenario should include both walk and rest bouts");
     }
     private static void NeuralResetLeavesBody()
     {

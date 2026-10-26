@@ -12,7 +12,7 @@ The network advances in 1 ms steps. Each neuron has a dimensionless leaky integr
 
 The existing cursor-proximity sensor is a local product behavior signal, not an identified retinal neuron. During exploration, a bilateral DNa02 rate-drive interface is used as an assumed locomotion command; during a brief cursor-triggered escape, bilateral MDN drive is used as an assumed reverse command. A coarse six-leg contact/movement signal is mapped to annotated leg sensory populations, although the dataset does not supply neuron-specific tuning or preferred directions. These are modeled interfaces, not added anatomical edges or validated sensory pathways.
 
-Per-leg motor population activity affects the modeled gait rate. A tripod phase pattern, the 2D surface movement, heading/turns, and cursor-escape policy are body/behavior assumptions. The included subgraph contains **leg** motor anatomy only; it does not contain a flight or wingbeat circuit. Wing motion during the brief escape display is a visual animation, not MaleCNS-driven flight physiology.
+Per-leg motor population activity affects the modeled gait rate. A tripod phase pattern, 3–8 s walk / 1–3 s rest bout schedule, 2D surface movement, heading/turns, and cursor-escape policy are body/behavior assumptions, not measured time distributions. The included subgraph contains **leg** motor anatomy only; it does not contain a flight or wingbeat circuit. Wing motion during the brief escape display is a visual animation, not MaleCNS-driven flight physiology.
 
 ## Limitations and validation
 

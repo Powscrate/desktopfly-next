@@ -8,7 +8,7 @@
 
 ## Assumptions and limitations
 
-MaleCNS edge contact counts are anatomical measurements, not effective conductances. The app's contact normalization, transmitter-effect signs, LIF parameters, adaptation, baseline activity, sensory drive mapping and descending command drives are assumptions. The extracted graph is a bounded selected subgraph; many inputs and much of the CNS are omitted. Sensory annotations do not identify per-neuron directional tuning. The tripod phase, motor-rate-to-gait mapping, body translation/heading, cursor-threat behavior and flight policy are modeled approximations.
+MaleCNS edge contact counts are anatomical measurements, not effective conductances. The app's contact normalization, transmitter-effect signs, LIF parameters, adaptation, baseline activity, sensory drive mapping and descending command drives are assumptions. The extracted graph is a bounded selected subgraph; many inputs and much of the CNS are omitted. Sensory annotations do not identify per-neuron directional tuning. The tripod phase, motor-rate-to-gait mapping, 3–8 s walk / 1–3 s rest bout durations, body translation/heading, cursor-threat behavior and flight policy are modeled approximations, not fitted behavior statistics.
 
 The selected graph has leg motor and sensory anatomy but no wing motor/flight circuit. Wing flutter and the slight temporary zoom during escape are visual signals only, not neural or biomechanical flight. No membrane parameters or movement have been fitted to electrophysiology or measured behavioral kinematics. The app is not an entire-brain simulation, validated escape reflex, or complete fly digital twin.
 
