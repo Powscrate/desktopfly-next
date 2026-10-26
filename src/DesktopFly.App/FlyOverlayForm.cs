@@ -19,6 +19,7 @@ internal sealed class FlyOverlayForm : Form
     private readonly System.Windows.Forms.Timer _timer;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private readonly FlySpriteAtlas? _flyAtlas;
+    private readonly FlySpriteOverlayForm? _flySpriteWindow;
     private FlySimulation _simulation;
     private Strings _text;
     private Point _lastCursor;
@@ -27,7 +28,7 @@ internal sealed class FlyOverlayForm : Form
     private Rectangle _virtualBounds;
     private double _animationTime;
     private double _simulationAccumulator;
-    private bool _paused, _interactive, _showDiagnostics, _dragging;
+    private bool _paused, _interactive, _showDiagnostics, _dragging, _spriteRenderingFailed;
     private Point _dragOffset;
     private ToolStripMenuItem _overlayItem = null!;
     private ToolStripMenuItem _settingsItem = null!;
@@ -43,13 +44,18 @@ internal sealed class FlyOverlayForm : Form
     public FlyOverlayForm(AppConfiguration config, string configPath, DiagnosticLog log)
     {
         _config = config; _configPath = configPath; _log = log; _text = new Strings(config.Language);
+        FlySpriteAtlas? loadedAtlas = null;
         try
         {
-            _flyAtlas = FlySpriteAtlas.Load();
-            _log.Write("INFO", "Loaded bundled FlyGym-derived 3D fly sprite atlas.");
+            loadedAtlas = FlySpriteAtlas.Load();
+            _flySpriteWindow = new FlySpriteOverlayForm(loadedAtlas);
+            _flyAtlas = loadedAtlas;
+            _log.Write("INFO", "Loaded bundled FlyGym-derived 3D fly atlas with per-pixel alpha.");
         }
         catch (Exception ex)
         {
+            loadedAtlas?.Dispose();
+            _flySpriteWindow = null;
             _flyAtlas = null;
             _log.Write("WARN", "Could not load 3D fly atlas; using the built-in procedural fallback.", ex);
         }
@@ -131,6 +137,7 @@ internal sealed class FlyOverlayForm : Form
                 }
             }
             else _simulationAccumulator = 0;
+            RenderFlySprite();
             Invalidate();
         }
         catch (Exception ex) { _log.Write("ERROR", "Overlay update failed", ex); }
@@ -140,8 +147,23 @@ internal sealed class FlyOverlayForm : Form
 
     private void SetOverlayVisible(bool visible)
     {
-        if (visible) Show(); else Hide();
+        if (visible)
+        {
+            Show();
+            RenderFlySprite();
+        }
+        else
+        {
+            _flySpriteWindow?.Hide();
+            Hide();
+        }
         if (_overlayItem is not null) _overlayItem.Text = visible ? _text.HideOverlay : _text.ShowOverlay;
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        RenderFlySprite();
     }
 
     private Vector2 CurrentCenter() => new(_virtualBounds.Left + _virtualBounds.Width / 2.0, _virtualBounds.Top + _virtualBounds.Height / 2.0);
@@ -180,6 +202,7 @@ internal sealed class FlyOverlayForm : Form
             style = enabled ? style & ~WsExTransparent : style | WsExTransparent;
             SetWindowLong(Handle, -20, style);
             SetWindowPos(Handle, new IntPtr(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x0020);
+            _flySpriteWindow?.KeepAboveOverlay();
         }
         _interactionItem.Checked = enabled; Invalidate();
     }
@@ -217,12 +240,17 @@ internal sealed class FlyOverlayForm : Form
     protected override void OnPaint(PaintEventArgs e)
     {
         e.Graphics.Clear(_transparent); e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        var x = (float)(_simulation.Position.X - _virtualBounds.Left); var y = (float)(_simulation.Position.Y - _virtualBounds.Top);
-        var scale = _config.FlySize * 0.85f;
-        e.Graphics.TranslateTransform(x, y); e.Graphics.RotateTransform((float)(_simulation.HeadingRadians * 180 / Math.PI)); e.Graphics.ScaleTransform(scale, scale);
-        if (_flyAtlas is null) DrawProceduralFly(e.Graphics);
-        else DrawModelFly(e.Graphics);
-        e.Graphics.ResetTransform();
+        if (_flyAtlas is null || _spriteRenderingFailed)
+        {
+            var x = (float)(_simulation.Position.X - _virtualBounds.Left);
+            var y = (float)(_simulation.Position.Y - _virtualBounds.Top);
+            var scale = _config.FlySize * 0.85f;
+            e.Graphics.TranslateTransform(x, y);
+            e.Graphics.RotateTransform((float)(_simulation.HeadingRadians * 180 / Math.PI));
+            e.Graphics.ScaleTransform(scale, scale);
+            DrawProceduralFly(e.Graphics);
+            e.Graphics.ResetTransform();
+        }
         if (_showDiagnostics)
         {
             using var font = new Font("Segoe UI", 9, FontStyle.Regular);
@@ -233,24 +261,22 @@ internal sealed class FlyOverlayForm : Form
         base.OnPaint(e);
     }
 
-    private void DrawModelFly(Graphics g)
+    private void RenderFlySprite()
     {
-        // The atlas contains four shaded poses of the real mesh with a small wing beat.
-        // It is intentionally raster-based at runtime for dependable low-end GPU support.
+        if (!Visible || _flySpriteWindow is null || _spriteRenderingFailed) return;
         var beatsPerSecond = _simulation.State == FlyState.Escape ? 22.0 : 1.4;
         var frame = (int)Math.Floor(_animationTime * beatsPerSecond * FlySpriteAtlas.FrameCount);
-        var oldInterpolation = g.InterpolationMode;
-        var oldPixelOffset = g.PixelOffsetMode;
         try
         {
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-            _flyAtlas!.Draw(g, new RectangleF(-42, -34, 84, 68), frame);
+            _flySpriteWindow.Present(_simulation.Position, _simulation.HeadingRadians,
+                _config.FlySize * 0.85f, frame);
         }
-        finally
+        catch (Exception ex)
         {
-            g.InterpolationMode = oldInterpolation;
-            g.PixelOffsetMode = oldPixelOffset;
+            _spriteRenderingFailed = true;
+            _flySpriteWindow.Hide();
+            _log.Write("ERROR", "Per-pixel-alpha fly rendering failed; using the procedural fallback.", ex);
+            Invalidate();
         }
     }
 
@@ -306,7 +332,8 @@ internal sealed class FlyOverlayForm : Form
     protected override void OnMouseUp(MouseEventArgs e) { _dragging = false; Capture = false; base.OnMouseUp(e); }
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
-        _timer.Stop(); _settingsForm?.Close(); _tray.Visible = false; _tray.Dispose(); _flyAtlas?.Dispose(); SaveConfig(); base.OnFormClosing(e);
+        _timer.Stop(); _settingsForm?.Close(); _tray.Visible = false; _tray.Dispose();
+        _flySpriteWindow?.Dispose(); _flyAtlas?.Dispose(); SaveConfig(); base.OnFormClosing(e);
     }
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int index);
