@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Replaced the GLB-based renderer with the user-provided fly graphic, background-cut for a per-pixel-alpha sprite window. The app no longer embeds or loads the GLB at runtime; Windows compilation and visual appearance remain unverified.
+
 ## 0.1.0 — 2026-10-26
 
 - Created .NET 8 solution with a WinForms Windows overlay and independent simulation library.

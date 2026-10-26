@@ -6,6 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DesktopFly.Simulation\DesktopFly.Simulation.csproj" />
-    <EmbeddedResource Include="..\..\assets\models\neuromechfly-v2\desktopfly-sprite-atlas.png" LogicalName="DesktopFly.App.drosophila-atlas.png" />
+    <EmbeddedResource Include="..\..\assets\sprites\fly\desktopfly.png" LogicalName="DesktopFly.App.desktopfly.png" />
   </ItemGroup>
 </Project>

@@ -25,7 +25,7 @@ internal sealed class FlySpriteOverlayForm : Form
     private const int CanvasSize = 288;
     private const int CanvasBytes = CanvasSize * CanvasSize * 4;
 
-    private readonly FlySpriteAtlas _atlas;
+    private readonly FlySpriteImage _sprite;
     private readonly Bitmap _canvas = new(CanvasSize, CanvasSize, PixelFormat.Format32bppPArgb);
     private readonly byte[] _pixels = new byte[CanvasBytes];
     private IntPtr _memoryDc;
@@ -33,9 +33,9 @@ internal sealed class FlySpriteOverlayForm : Form
     private IntPtr _dibBits;
     private IntPtr _previousBitmap;
 
-    public FlySpriteOverlayForm(FlySpriteAtlas atlas)
+    public FlySpriteOverlayForm(FlySpriteImage atlas)
     {
-        _atlas = atlas;
+        _sprite = atlas;
         FormBorderStyle = FormBorderStyle.None;
         ShowInTaskbar = false;
         TopMost = true;
@@ -73,7 +73,7 @@ internal sealed class FlySpriteOverlayForm : Form
             graphics.TranslateTransform(CanvasSize / 2f, CanvasSize / 2f);
             graphics.RotateTransform((float)(headingRadians * 180.0 / Math.PI));
             graphics.ScaleTransform(scale, scale);
-            _atlas.Draw(graphics, new RectangleF(-42, -34, 84, 68));
+            _sprite.Draw(graphics, new RectangleF(-42, -34, 84, 68));
         }
 
         var data = _canvas.LockBits(new Rectangle(0, 0, CanvasSize, CanvasSize),

@@ -11,7 +11,7 @@ LIF visual-threat unit → immediate excitatory synthetic synapse → LIF escape
      ↓ motor spike events
 FlySimulation (wander/escape state, velocity, heading, virtual-screen constraints)
      ↓ read-only position/state
-WinForms transparent overlay (static scan-derived 3D sprite; separate per-pixel-alpha window)
+WinForms transparent overlay → separate per-pixel-alpha sprite window (user-provided fly graphic)
      ↔ non-modal settings/diagnostics window (local controls, live counters)
      ↓ next tick samples cursor again
 ```
@@ -21,7 +21,7 @@ The neural and simulation projects have no rendering or Windows dependencies. `F
 ## Projects
 
 - `src/DesktopFly.Simulation`: cross-platform vector math, environment signal contract, cursor-threat approximation, LIF neuron, synthetic two-cell circuit, headless behavior/locomotion, JSON configuration and local diagnostic logger.
-- `src/DesktopFly.App`: Windows-only WinForms overlay, tray controls, non-modal settings/live diagnostics window, native extended-window-style interop, embedded FlyGym-derived static sprite, per-pixel-alpha sprite window; no substitute drawing, local cursor integration, English/French strings.
+- `src/DesktopFly.App`: Windows-only WinForms overlay, tray controls, non-modal settings/live diagnostics window, native extended-window-style interop, user-provided transparent sprite in a separate click-through/non-activating window, local cursor integration, English/French strings. The NeuroMechFly GLB renderer and its bundled assets have been removed.
 - `tests/DesktopFly.Simulation.Tests`: no-package executable checks plus reproducible CSV experiment mode.
 - `data/`: example configuration and human-readable description of the synthetic circuit. The runtime circuit constants currently live in `SyntheticEscapeCircuit`; the JSON is descriptive, not loaded as a network model.
 
@@ -31,8 +31,8 @@ The simulation has no dependency on WinForms, GDI+, P/Invoke, or display APIs. U
 
 ## Window behavior
 
-The window is borderless, topmost, tool-window/no-activate, transparent-keyed and click-through unless the user turns on interaction mode. Win32 extended styles are adjusted on the existing window when toggled. The window covers the virtual screen rectangle, including negative monitor origins. This implementation has not yet been interactively tested across Windows versions, DPI configurations, sleep/resume, or mixed-DPI monitors; those remain release gates.
+The main window is borderless, topmost, tool-window/no-activate, transparent-keyed and click-through unless the user turns on interaction mode. The sprite is drawn in a separate per-pixel-alpha window. Win32 extended styles are adjusted on the existing window when toggled. The main window covers the virtual screen rectangle, including negative monitor origins. The replacement sprite resource has not yet been interactively tested across Windows versions, DPI configurations, sleep/resume, or mixed-DPI monitors; those remain release gates.
 
 ## Approximation boundaries
 
-The displayed anatomy is the licensed, 69-part FlyGym mesh assembled in the official tripod walking snapshot; its six legs and tarsal segments come from the source geometry, not hand-drawn stand-ins. It is rasterized to one static sprite at build time; the GLB is not loaded or rasterized live, and there is no articulated gait or wingbeat. Lighting, surface colors, and the soft shadow are presentation choices; the model has no UV texture maps. The on-screen locomotion and neural circuit remain simplified synthetic behavior, not a measured biological simulation or rigid-body flight. Real desktop obstacles, full sensory modalities, generalized neural-network import, and detailed diagnostic UI are not implemented.
+The displayed fly is a raster graphic supplied by the user, with its dark background converted to per-pixel alpha. The app rotates and scales that sprite as the simulated position and heading change; it does not use the GLB or construct anatomy. The image has no articulated leg cycle, so movement can look like gliding rather than stepping. The on-screen locomotion and neural circuit remain simplified synthetic behavior, not a measured biological simulation or rigid-body flight. Real desktop obstacles, full sensory modalities, generalized neural-network import, and detailed diagnostic UI are not implemented.

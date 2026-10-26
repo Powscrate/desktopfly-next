@@ -18,7 +18,7 @@ internal sealed class FlyOverlayForm : Form
     private readonly NotifyIcon _tray;
     private readonly System.Windows.Forms.Timer _timer;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
-    private readonly FlySpriteAtlas? _flyAtlas;
+    private readonly FlySpriteImage? _flyImage;
     private readonly FlySpriteOverlayForm? _flySpriteWindow;
     private FlySimulation _simulation;
     private Strings _text;
@@ -43,20 +43,20 @@ internal sealed class FlyOverlayForm : Form
     public FlyOverlayForm(AppConfiguration config, string configPath, DiagnosticLog log)
     {
         _config = config; _configPath = configPath; _log = log; _text = new Strings(config.Language);
-        FlySpriteAtlas? loadedAtlas = null;
+        FlySpriteImage? loadedImage = null;
         try
         {
-            loadedAtlas = FlySpriteAtlas.Load();
-            _flySpriteWindow = new FlySpriteOverlayForm(loadedAtlas);
-            _flyAtlas = loadedAtlas;
-            _log.Write("INFO", "Loaded bundled FlyGym-derived 3D fly atlas with per-pixel alpha.");
+            loadedImage = FlySpriteImage.Load();
+            _flySpriteWindow = new FlySpriteOverlayForm(loadedImage);
+            _flyImage = loadedImage;
+            _log.Write("INFO", "Loaded the user-provided fly graphic as a transparent desktop sprite.");
         }
         catch (Exception ex)
         {
-            loadedAtlas?.Dispose();
+            loadedImage?.Dispose();
             _flySpriteWindow = null;
-            _flyAtlas = null;
-            _log.Write("WARN", "Could not load the bundled 3D fly model; no substitute fly will be drawn.", ex);
+            _flyImage = null;
+            _log.Write("WARN", "Could not load the supplied fly graphic; no substitute fly will be drawn.", ex);
         }
         _paused = config.StartPaused; _showDiagnostics = config.ShowDiagnostics;
         _virtualBounds = SystemInformation.VirtualScreen;
@@ -260,7 +260,7 @@ internal sealed class FlyOverlayForm : Form
         {
             _spriteRenderingFailed = true;
             _flySpriteWindow.Hide();
-            _log.Write("ERROR", "Per-pixel-alpha fly rendering failed; hiding the model instead of drawing a mock substitute.", ex);
+            _log.Write("ERROR", "Per-pixel-alpha rendering of the supplied fly graphic failed; hiding it rather than drawing a substitute.", ex);
             Invalidate();
         }
     }
@@ -282,7 +282,7 @@ internal sealed class FlyOverlayForm : Form
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         _timer.Stop(); _settingsForm?.Close(); _tray.Visible = false; _tray.Dispose();
-        _flySpriteWindow?.Dispose(); _flyAtlas?.Dispose(); SaveConfig(); base.OnFormClosing(e);
+        _flySpriteWindow?.Dispose(); _flyImage?.Dispose(); SaveConfig(); base.OnFormClosing(e);
     }
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int index);
