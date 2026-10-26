@@ -15,7 +15,7 @@ public sealed class DiagnosticLog
             Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
             if (File.Exists(_path) && new FileInfo(_path).Length > 1_000_000)
                 File.Move(_path, _path + ".1", true);
-            var line = $"{DateTimeOffset.Now:O} [{level}] {message}{(error is null ? "" : Environment.NewLine + error)}{Environment.NewLine}";
+            var line = $"{DateTimeOffset.Now:O} [{level}] {message}{(error is null ? "" : System.Environment.NewLine + error)}{System.Environment.NewLine}";
             File.AppendAllText(_path, line, Encoding.UTF8);
         }
     }
