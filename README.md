@@ -1,6 +1,6 @@
 # DesktopFly Next
 
-DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at an early **0.1.0 engineering prototype** milestone. It combines a native transparent WinForms overlay with a separate, headless .NET simulation core. The fly is a procedurally drawn 2D Drosophila-inspired approximation—not a 3D anatomical model.
+DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at an early **0.1.0 engineering prototype** milestone. It combines a native transparent WinForms overlay with a separate, headless .NET simulation core. The overlay now uses a four-frame, software-rendered sprite atlas baked from an assembled scan-derived *Drosophila* 3D model; it is a 3D-derived 2D presentation, not live 3D rendering or a measured animation.
 
 **French UI is included.** Right-click the notification-area icon → “Language / Langue” → “Français”. Language is persisted locally. The initial language is English; the choice is made in-app.
 
@@ -9,7 +9,7 @@ DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at
 - Windows 10/11, x64 native WinForms overlay: borderless, always-on-top, virtual-desktop bounds, transparency-key background, click-through by default, optional grab/drag interaction, pause/resume/reset/show-hide/exit from a tray menu, optional start-in-tray configuration, English/French UI strings, local configuration and rotating local logs.
 - A non-modal settings and diagnostics window with live state/threat/position/spike counts; adjustable simulation speed and fly size; pause, cursor-avoidance and desktop-diagnostics toggles; independent neural reset.
 - A deterministic, headless simulation core: cursor-proximity/motion threat signal → two LIF neurons (sensory afferent and synthetic escape-command unit) → motor spike → physically constrained movement. This is an explicit, causal neural-to-motor path; the tiny circuit is synthetic, not a FlyWire model.
-- A low-resolution 2D procedural fly renderer and basic exploratory/escape/rest states. A separate 3D NeuroMechFly v2 scan-derived mesh (69 named parts, Apache-2.0) has now been sourced and bundled with provenance; the overlay does not render it yet.
+- Basic exploratory/escape/rest states displayed with a four-frame transparent sprite atlas baked from NeuroMechFly v2's 69-part, micro-CT-derived anatomical mesh (Apache-2.0). FlyGym/MuJoCo neutral-pose transforms assemble the separate local-frame meshes; GDI+ displays the shaded sprite with an illustrative wing-flutter frame. The runtime has a procedural 2D fallback if the embedded atlas fails to load.
 - Dependency-free console checks and a reproducible closed-loop CSV experiment runner.
 
 ## Build and run (Windows)
@@ -35,7 +35,7 @@ The first command runs deterministic headless assertions without external test p
 
 This is a first vertical slice, not the full roadmap in the original product brief. Windows compilation/UI interaction have **not been executed in this Linux environment** (no .NET SDK or Windows desktop runtime is installed). The simulation tests are authored but likewise unexecuted here. No Windows binary or performance claim is supplied. See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for exact phase status and next steps.
 
-Not yet implemented: runtime 3D rendering or rigged animation (the scan-derived model is bundled but not yet displayed), advanced neuron explorer/spike raster tooling, flight physics, obstacle/window geometry, formal connectome importer or scientific neural dataset, delayed/sparse general-purpose network engine, broader stimulus suite, Windows UI automation, installer, and measured performance report. The overlay samples only local cursor position and derived movement for the fly's threat stimulus; it does not capture the screen, inspect window content, record keyboard input, or send telemetry.
+Not yet implemented: live 3D camera/rendering or a rigged, measured biomechanical gait (the app draws a pre-baked 3D-derived sprite atlas); UV texture maps or photorealistic surface materials; advanced neuron explorer/spike raster tooling; flight physics; obstacle/window geometry; formal connectome importer or scientific neural dataset; delayed/sparse general-purpose network engine; broader stimulus suite; Windows UI automation; installer; and measured performance report. The overlay samples only local cursor position and derived movement for the fly's threat stimulus; it does not capture the screen, inspect window content, record keyboard input, or send telemetry.
 
 ## Documentation
 

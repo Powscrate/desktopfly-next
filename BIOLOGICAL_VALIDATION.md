@@ -2,7 +2,7 @@
 
 ## Claims supported by this prototype
 
-- The app now bundles a scan-derived NeuroMechFly v2 geometry asset for adult female *Drosophila melanogaster*; upstream documentation identifies the biomechanical model as based on a micro-CT scan of a real adult female fly. The current GDI+ renderer still shows its procedural 2D approximation; the GLB is not yet rendered by the app.
+- The app embeds a four-frame GDI+ sprite atlas baked from NeuroMechFly v2's scan-derived geometry for adult female *Drosophila melanogaster*. Its 69 mesh parts are assembled using FlyGym 1.2.1/MuJoCo 3.2.7 static neutral-pose transforms. The app does not load the GLB live, use UV texture maps, or simulate/measure wing kinematics; atlas lighting, coloring, and wing-flutter poses are presentation choices.
 - A leaky integrate-and-fire abstraction is used for two computational units.
 - A stimulus variable is integrated to threshold, producing discrete spikes; a second spiking unit receives excitatory input and affects simulated movement.
 

@@ -18,6 +18,7 @@ internal sealed class FlyOverlayForm : Form
     private readonly NotifyIcon _tray;
     private readonly System.Windows.Forms.Timer _timer;
     private readonly Stopwatch _clock = Stopwatch.StartNew();
+    private readonly FlySpriteAtlas? _flyAtlas;
     private FlySimulation _simulation;
     private Strings _text;
     private Point _lastCursor;
@@ -42,6 +43,16 @@ internal sealed class FlyOverlayForm : Form
     public FlyOverlayForm(AppConfiguration config, string configPath, DiagnosticLog log)
     {
         _config = config; _configPath = configPath; _log = log; _text = new Strings(config.Language);
+        try
+        {
+            _flyAtlas = FlySpriteAtlas.Load();
+            _log.Write("INFO", "Loaded bundled FlyGym-derived 3D fly sprite atlas.");
+        }
+        catch (Exception ex)
+        {
+            _flyAtlas = null;
+            _log.Write("WARN", "Could not load 3D fly atlas; using the built-in procedural fallback.", ex);
+        }
         _paused = config.StartPaused; _showDiagnostics = config.ShowDiagnostics;
         _virtualBounds = SystemInformation.VirtualScreen;
         var start = new Vector2(_virtualBounds.Left + _virtualBounds.Width * 0.48, _virtualBounds.Top + _virtualBounds.Height * 0.54);
@@ -209,7 +220,8 @@ internal sealed class FlyOverlayForm : Form
         var x = (float)(_simulation.Position.X - _virtualBounds.Left); var y = (float)(_simulation.Position.Y - _virtualBounds.Top);
         var scale = _config.FlySize * 0.85f;
         e.Graphics.TranslateTransform(x, y); e.Graphics.RotateTransform((float)(_simulation.HeadingRadians * 180 / Math.PI)); e.Graphics.ScaleTransform(scale, scale);
-        DrawFly(e.Graphics);
+        if (_flyAtlas is null) DrawProceduralFly(e.Graphics);
+        else DrawModelFly(e.Graphics);
         e.Graphics.ResetTransform();
         if (_showDiagnostics)
         {
@@ -221,7 +233,28 @@ internal sealed class FlyOverlayForm : Form
         base.OnPaint(e);
     }
 
-    private void DrawFly(Graphics g)
+    private void DrawModelFly(Graphics g)
+    {
+        // The atlas contains four shaded poses of the real mesh with a small wing beat.
+        // It is intentionally raster-based at runtime for dependable low-end GPU support.
+        var beatsPerSecond = _simulation.State == FlyState.Escape ? 22.0 : 1.4;
+        var frame = (int)Math.Floor(_animationTime * beatsPerSecond * FlySpriteAtlas.FrameCount);
+        var oldInterpolation = g.InterpolationMode;
+        var oldPixelOffset = g.PixelOffsetMode;
+        try
+        {
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            _flyAtlas!.Draw(g, new RectangleF(-42, -34, 84, 68), frame);
+        }
+        finally
+        {
+            g.InterpolationMode = oldInterpolation;
+            g.PixelOffsetMode = oldPixelOffset;
+        }
+    }
+
+    private void DrawProceduralFly(Graphics g)
     {
         var phase = _animationTime * (2 + Math.Min(_simulation.Speed / 30, 2));
         var gait = (float)Math.Sin(phase) * 3.8f;
@@ -273,7 +306,7 @@ internal sealed class FlyOverlayForm : Form
     protected override void OnMouseUp(MouseEventArgs e) { _dragging = false; Capture = false; base.OnMouseUp(e); }
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
-        _timer.Stop(); _settingsForm?.Close(); _tray.Visible = false; _tray.Dispose(); SaveConfig(); base.OnFormClosing(e);
+        _timer.Stop(); _settingsForm?.Close(); _tray.Visible = false; _tray.Dispose(); _flyAtlas?.Dispose(); SaveConfig(); base.OnFormClosing(e);
     }
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)] private static extern int GetWindowLong(IntPtr hWnd, int index);
