@@ -27,7 +27,7 @@ internal sealed class Strings(string language)
     public string SensoryCount => _fr ? "Pics sensoriels" : "Sensory spikes";
     public string MotorCount => _fr ? "Pics moteurs" : "Motor spikes";
     public string NeuralUnits => _fr ? "Unités neuronales" : "Neurons";
-    public string SynapseCount => _fr ? "Synapses" : "Synapses";
+    public string ConnectionCount => _fr ? "Connexions" : "Connections";
     public string ResetSimulation => _fr ? "Réinitialiser la simulation" : "Reset simulation";
     public string ResetNeural => _fr ? "Réinitialiser l'activité neuronale" : "Reset neural activity";
     public string Close => _fr ? "Fermer" : "Close";

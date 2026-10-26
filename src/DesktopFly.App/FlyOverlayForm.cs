@@ -185,7 +185,8 @@ internal sealed class FlyOverlayForm : Form
                 resetSimulation: () => { _simulation.Reset(CurrentCenter()); Invalidate(); },
                 resetNeural: () => { _simulation.ResetNeural(); Invalidate(); },
                 snapshot: () => new SettingsSnapshot(_simulation.State, _simulation.ThreatLevel,
-                    _simulation.Position, _simulation.SensorySpikeCount, _simulation.MotorSpikeCount));
+                    _simulation.Position, _simulation.SensorySpikeCount, _simulation.MotorSpikeCount,
+                    _simulation.NeuralNeuronCount, _simulation.NeuralConnectionCount));
             _settingsForm.FormClosed += (_, _) => _settingsForm = null;
         }
         _settingsForm.Show(); _settingsForm.BringToFront(); _settingsForm.Activate();
@@ -254,7 +255,8 @@ internal sealed class FlyOverlayForm : Form
         try
         {
             _flySpriteWindow.Present(_simulation.Position, _simulation.HeadingRadians,
-                _config.FlySize * 0.85f);
+                _config.FlySize * 0.85f, _simulation.StridePhase, _simulation.IsWalking,
+                _simulation.WingPhase, _simulation.IsFlying);
         }
         catch (Exception ex)
         {

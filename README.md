@@ -1,16 +1,16 @@
 # DesktopFly Next
 
-DesktopFly Next is an offline-first Windows desktop-fly simulation, currently at an early **0.1.0 engineering prototype** milestone. It combines a native transparent WinForms overlay with a separate, headless .NET simulation core. The overlay displays the fly graphic supplied by the user, with its dark background removed for transparent desktop placement. The GLB renderer is no longer part of the app's runtime path.
+DesktopFly Next is an offline-first Windows desktop-fly simulation, currently an early **0.1.0 engineering prototype**. It combines a native transparent WinForms overlay with a headless .NET simulation core. The overlay uses the user-provided top-view fly graphic; its dark background is removed for transparent desktop placement. The GLB renderer/model is not part of the app.
 
 **French UI is included.** Right-click the notification-area icon → “Language / Langue” → “Français”. Language is persisted locally. The initial language is English; the choice is made in-app.
 
 ## Current implementation
 
-- Windows 10/11, x64 native WinForms overlay: borderless, always-on-top, virtual-desktop bounds, transparency-key background, click-through by default, optional grab/drag interaction, pause/resume/reset/show-hide/exit from a tray menu, optional start-in-tray configuration, English/French UI strings, local configuration and rotating local logs.
+- Windows 10/11, x64 native WinForms overlay: borderless, always-on-top, virtual-desktop bounds, transparent background, click-through by default, optional grab/drag interaction, tray controls, local settings/logs, and English/French UI.
 - A non-modal settings and diagnostics window with live state/threat/position/spike counts; adjustable simulation speed and fly size; pause, cursor-avoidance and desktop-diagnostics toggles; independent neural reset.
-- A deterministic, headless simulation core: cursor-proximity/motion threat signal → two LIF neurons (sensory afferent and synthetic escape-command unit) → motor spike → physically constrained movement. This is an explicit, causal neural-to-motor path; the tiny circuit is synthetic, not a FlyWire model.
-- Basic exploratory/escape/rest states displayed with the user-provided fly sprite, cut out from its original dark background and shown in a per-pixel-alpha window. The image is scaled and rotated with the simulation. The GLB is no longer embedded in the app; if the sprite cannot load, the fly is hidden and an error is logged.
-- Dependency-free console checks and a reproducible closed-loop CSV experiment runner.
+- A headless simulation embedding a bounded **MaleCNS v1.0 male Drosophila leg-locomotor subgraph**: 1,045 neurons and 17,224 measured directed connections. A sparse LIF-style model with explicit parameter assumptions drives a six-leg body interface. Source, license, extraction, and checksum are documented in [`DATA_PROVENANCE.md`](DATA_PROVENANCE.md) and [`data/neural/README.md`](data/neural/README.md).
+- Procedural six-leg motion, persistent surface walking with firm ground traction and turns, brief cursor-triggered escape, and animated wings/temporary modest zoom during escape. The supplied overhead raster is retained as the body artwork; art animation, tripod phase, body mechanics, cursor response, and wingbeat are illustrative modeling choices, not measured kinematics. The bundled neural graph is leg-only and does not drive wings.
+- Offline runtime and no third-party NuGet packages. No screen capture, window-content inspection, keyboard logging, telemetry, or network requests.
 
 ## Build and run (Windows)
 
@@ -29,13 +29,13 @@ dotnet run --project tests/DesktopFly.Simulation.Tests/DesktopFly.Simulation.Tes
 dotnet run --project tests/DesktopFly.Simulation.Tests/DesktopFly.Simulation.Tests.csproj -- --experiment experiments/closed-loop-export.csv
 ```
 
-The first command runs deterministic headless assertions without external test packages. The second writes a CSV of the simulated cursor-approach experiment. A scenario description is in [`experiments/closed-loop-cursor-threat.json`](experiments/closed-loop-cursor-threat.json).
+The first command runs deterministic headless assertions without external test packages, including graph counts/motor recruitment, surface gait, flight animation phase, deterministic replay, bounds, configuration, and cursor response. The second writes a CSV of a reproducible cursor-approach experiment. A scenario description is in [`experiments/closed-loop-cursor-threat.json`](experiments/closed-loop-cursor-threat.json).
 
 ## Honest scope and limitations
 
-This is a first vertical slice, not the full roadmap in the original product brief. Windows compilation/UI interaction have **not been executed in this Linux environment** (no .NET SDK or Windows desktop runtime is installed). The simulation tests are authored but likewise unexecuted here. The replacement user-supplied sprite resource has not yet been compiled or visually tested on Windows; no Windows binary or performance claim is supplied. See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for exact phase status and next steps.
+The MaleCNS file is a bounded, contact-count subgraph rather than the complete connectome. Contact counts are not conductances; transmitter signs, membrane dynamics, sensory tuning, descending drive mappings, body mechanics, and gait/flight policies are assumptions. The visuals are illustrative, the animated raster has not been compared with measured fly kinematics, and this is not a biologically validated behavior or whole-brain model. Flight/wing motion is a visual overlay; no wing neural circuit or flight physics is bundled. See [`NEURAL_MODEL.md`](NEURAL_MODEL.md), [`BIOLOGICAL_VALIDATION.md`](BIOLOGICAL_VALIDATION.md), and [`PROJECT_STATUS.md`](PROJECT_STATUS.md).
 
-The supplied sprite translates and turns with the simplified desktop simulation, but its legs are not animated; it can look like it is gliding rather than walking. No rigged or measured biomechanical gait is implemented. Also not implemented: UV texture maps or photorealistic surface materials; advanced neuron explorer/spike raster tooling; flight physics; obstacle/window geometry; formal connectome importer or scientific neural dataset; delayed/sparse general-purpose network engine; broader stimulus suite; Windows UI automation; installer; and measured performance report. The overlay samples only local cursor position and derived movement for the fly's threat stimulus; it does not capture the screen, inspect window content, record keyboard input, or send telemetry.
+Windows compilation and UI interaction have **not been executed in this Linux environment** (no .NET SDK or Windows desktop runtime is installed). The authored headless tests likewise remain unexecuted here; no Windows binary or performance claim is supplied. The sprite's wing extraction/leg overlay and per-pixel rendering need Windows visual validation. The overlay samples only local cursor position and derived movement for a coarse threat signal.
 
 ## Documentation
 

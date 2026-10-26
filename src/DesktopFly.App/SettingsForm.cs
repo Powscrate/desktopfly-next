@@ -5,7 +5,7 @@ using DesktopFly.Simulation.Environment;
 namespace DesktopFly.App;
 
 internal readonly record struct SettingsSnapshot(FlyState State, double Threat, Vector2 Position,
-    long SensorySpikes, long MotorSpikes);
+    long SensorySpikes, long MotorSpikes, int NeuronCount, int ConnectionCount);
 
 /// <summary>Lightweight, non-modal controls and live diagnostics; simulation continues while open.</summary>
 internal sealed class SettingsForm : Form
@@ -43,8 +43,8 @@ internal sealed class SettingsForm : Form
     private readonly Label _motorTitle = new();
     private readonly Label _neuronsTitle = new();
     private readonly Label _synapsesTitle = new();
-    private readonly Label _neuronsValue = new() { Text = "2" };
-    private readonly Label _synapsesValue = new() { Text = "1" };
+    private readonly Label _neuronsValue = new();
+    private readonly Label _synapsesValue = new();
     private readonly Button _resetSimulationButton = new();
     private readonly Button _resetNeuralButton = new();
     private readonly Button _closeButton = new();
@@ -141,7 +141,7 @@ internal sealed class SettingsForm : Form
         _stateTitle.Text = strings.StateLabel; _threatTitle.Text = strings.ThreatLabel;
         _positionTitle.Text = strings.PositionLabel; _sensoryTitle.Text = strings.SensoryCount;
         _motorTitle.Text = strings.MotorCount; _neuronsTitle.Text = strings.NeuralUnits;
-        _synapsesTitle.Text = strings.SynapseCount;
+        _synapsesTitle.Text = strings.ConnectionCount;
         _resetSimulationButton.Text = strings.ResetSimulation;
         _resetNeuralButton.Text = strings.ResetNeural; _closeButton.Text = strings.Close;
         RefreshSnapshot();
@@ -168,6 +168,8 @@ internal sealed class SettingsForm : Form
         _positionValue.Text = $"{snapshot.Position.X:0}, {snapshot.Position.Y:0} px";
         _sensoryValue.Text = snapshot.SensorySpikes.ToString();
         _motorValue.Text = snapshot.MotorSpikes.ToString();
+        _neuronsValue.Text = snapshot.NeuronCount.ToString();
+        _synapsesValue.Text = snapshot.ConnectionCount.ToString();
     }
 
     private void ConfigureGroup(GroupBox group, int height)

@@ -52,11 +52,11 @@ internal sealed class Tests
     private int _total;
     public void Run()
     {
-        Test("LIF threshold, reset, and refractory", LifThresholdAndRefractory);
-        Test("LIF rejects invalid integration step", LifRejectsInvalidStep);
         Test("cursor threat sensor bounded and distance-sensitive", ThreatSensor);
         Test("disabled cursor threat sensor returns zero", ThreatSensorCanBeDisabled);
-        Test("neural motor circuit causally triggers escape movement", ClosedLoopEscape);
+        Test("MaleCNS v1.0 subgraph loads and recruits motor neurons", MaleCnsCircuit);
+        Test("connectome-driven locomotion and threat escape", ClosedLoopEscape);
+        Test("walking gait and flight wing phases advance", GaitAndFlightAnimation);
         Test("neural reset preserves body position", NeuralResetLeavesBody);
         Test("same seed produces reproducible movement", DeterministicReplay);
         Test("fly remains inside virtual desktop bounds", BoundaryConstraint);
@@ -70,21 +70,6 @@ internal sealed class Tests
         catch (Exception ex) { Console.Error.WriteLine($"FAIL {name}: {ex.Message}"); Environment.ExitCode = 1; }
     }
     private static void Assert(bool condition, string message) { if (!condition) throw new InvalidOperationException(message); }
-    private static void LifThresholdAndRefractory()
-    {
-        var neuron = new LifNeuron(timeConstantMs: 10, refractoryPeriodMs: 2);
-        Assert(neuron.Step(200, 1), "strong input should cross threshold");
-        Assert(neuron.MembranePotential == neuron.ResetPotential, "spike must reset membrane");
-        Assert(!neuron.Step(200, 1), "neuron must remain refractory");
-        Assert(!neuron.Step(200, 1), "last refractory interval must not emit");
-        Assert(neuron.Step(200, 1), "neuron should fire after refractory period");
-    }
-    private static void LifRejectsInvalidStep()
-    {
-        var neuron = new LifNeuron();
-        try { neuron.Step(0, 0); throw new InvalidOperationException("zero step was accepted"); }
-        catch (ArgumentOutOfRangeException) { }
-    }
     private static void ThreatSensor()
     {
         var sensor = new CursorThreatSensor();
@@ -101,15 +86,42 @@ internal sealed class Tests
             new Vector2(1000, 800), CursorThreatEnabled: false);
         Assert(sensor.Sample(new Vector2(200, 200), environment) == 0, "disabled cursor threat should be zero");
     }
+    private static void MaleCnsCircuit()
+    {
+        var circuit = new MaleCnsLocomotionCircuit();
+        Assert(circuit.NeuronCount == 1045 && circuit.ConnectionCount == 17224,
+            "embedded MaleCNS v1.0 locomotor subgraph counts differ from its provenance");
+        circuit.SetLegFeedback(new double[6], Enumerable.Repeat(0.8, 6).ToArray());
+        circuit.SetDescendingDrive(45, 0);
+        circuit.StepMilliseconds(1000);
+        Assert(circuit.TotalSpikes > 0 && circuit.MotorSpikes > 0,
+            "descending drive failed to recruit the measured leg circuit");
+        Assert(circuit.MeanMotorActivation > 0, "motor population rate did not reach the body interface");
+    }
     private static void ClosedLoopEscape()
     {
         var sim = new FlySimulation(new Vector2(500, 400), 17);
         var before = sim.Position;
         var env = new StimulusSnapshot(before, Vector2.Zero, Vector2.Zero, new Vector2(1000, 800));
         for (var i = 0; i < 240; i++) sim.Step(1.0 / 60, env);
-        Assert(sim.SensorySpikeCount > 0, "sensory LIF never spiked");
-        Assert(sim.MotorSpikeCount > 0 && sim.MotorEvents > 0, "threat did not cause neural motor output");
-        Assert(sim.State == FlyState.Escape || Vector2.Distance(sim.Position, before) > 1, "neural output did not affect locomotion");
+        Assert(sim.NeuralNeuronCount == 1045 && sim.NeuralConnectionCount == 17224,
+            "runtime is not using the documented MaleCNS locomotor subgraph");
+        Assert(sim.SensorySpikeCount > 0 && sim.MotorSpikeCount > 0,
+            "sensory/motor populations were not recruited during locomotion");
+        Assert(sim.MotorEvents > 0 && Vector2.Distance(sim.Position, before) > 1,
+            "cursor-threat response did not produce a surface displacement");
+    }
+    private static void GaitAndFlightAnimation()
+    {
+        var sim = new FlySimulation(new Vector2(500, 400), 5);
+        var surface = new StimulusSnapshot(new Vector2(900, 700), Vector2.Zero, Vector2.Zero,
+            new Vector2(1000, 800), CursorThreatEnabled: false);
+        for (var i = 0; i < 50; i++) sim.Step(1.0 / 60, surface);
+        Assert(sim.IsWalking && sim.StridePhase > 0 && !sim.IsFlying,
+            "surface walking did not advance the six-leg gait phase");
+        var threat = surface with { CursorPosition = sim.Position, CursorThreatEnabled = true };
+        sim.Step(1.0 / 60, threat);
+        Assert(sim.IsFlying && sim.WingPhase > 0, "escape did not animate wings or signal brief flight");
     }
     private static void NeuralResetLeavesBody()
     {
